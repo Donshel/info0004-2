@@ -1,5 +1,6 @@
 // g++ -std=c++11 -Wall -Wextra src/main.cpp src/anagrams.cpp -o bin/anagrams
 
+#include <ctime>
 #include <iostream>
 #include <fstream>
 #include "anagrams.hpp"
@@ -17,12 +18,16 @@ int main() {
     cout << "Enter a number :" << endl;
     cin >> max;
 
+    time_t t = time(NULL);
     vector<vector<string>> vect = anagrams(input, dict, max);
+    t -= time(NULL);
+    t *= -1;
 
     ofstream file;
     file.open("anagram.txt");
 
-    file << input + "\n\n";
+    file << input + " in " << t << " secs" << "\n\n";
+    cout << t << " secs" << endl;
     cout << endl;
 
     for (auto it = vect.begin(); it != vect.end(); it++) {
@@ -30,7 +35,7 @@ int main() {
             file << *it2 + " ";
             cout << *it2 + " ";
         }
-        
+
         file << "\n";
         cout << endl;
     }

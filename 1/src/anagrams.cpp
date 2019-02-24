@@ -5,7 +5,6 @@
 
 #include <utility> /// std::pair
 #include <string>
-#include <map>
 #include <set>
 #include <vector>
 
@@ -32,18 +31,6 @@ string cleanUp(string str) {
 }
 
 /**
- * Sort alphabetically the characters of a string.
- *
- * @param str, the string to sort.
- * @return the sorted string.
- */
-string alphaSort(string str) {
-    sort(str.begin(), str.end());
-
-    return str;
-}
-
-/**
  * Remove from one string all characters of another. One character is removed for each its occurences in the other string.
  *
  * @param str1, the string where are removed characters from. str1 is supposed to be alphabetically sorted.
@@ -51,7 +38,7 @@ string alphaSort(string str) {
  * @return the residual string, or "1" if str2 has character(s) that str1 hasn't.
  */
 string removeFrom(string str1, string str2) {
-    str2 = alphaSort(str2);
+    sort(str2.begin(), str2.end());
 
     auto pt = str1.begin();
 
@@ -97,54 +84,49 @@ Dictionary create_dictionary(const string& filename) {
     return dict;
 }
 
-typedef map<string, vector<pair<unsigned long, string>>> hashMap;
-
 /**
  * Compute all anagrams of a string, recursively.
- *
- * Already-checked strings and their anagrams are stored within a container so that a string is never checked twice.
  *
  * @param[in] str, the string whose anagrams are searched.
  * @param[in] dict, the used dictionary.
  * @param[in] indexes, a container of indexes of words of the dictionary in which it is still useful to search anagrams.
- * @param[in, out] tree, the container which keys are already-checked strings and values are their associated anagrams.
  * @param[in] current, the container of previous words in the current anagram.
  * @param[in, out] anagrams, the container of already-computed anagrams.
  * @param[in] max, the maximum number of words that are allowed to be added to current. If max is negative, there is no limit.
  */
-void build(string str, const Dictionary& dict, set<unsigned long> indexes, hashMap& tree, vector<string> current, vector<vector<string>>& anagrams, int max) {
+void build(string str, const Dictionary& dict, set<unsigned long> indexes, vector<string> current, vector<vector<string>>& anagrams, int max) {
     if (max == 0)
         return;
 
-    /// If str hasn't been checked
-    if (tree.find(str) == tree.end())
-        /// Search fitting words
-        for (auto it = indexes.begin(); it != indexes.end();) {
-            string residual = removeFrom(str, dict[*it]);
+    vector<pair<unsigned long, string>> tree;
 
-            if (residual != "1")
-                tree[str].push_back(pair<unsigned long, string> (*(it++), residual));
-            else
-                it = indexes.erase(it);
-        }
+    /// Search fitting words
+    for (auto it = indexes.begin(); it != indexes.end();) {
+        string residual = removeFrom(str, dict[*it]);
+
+        if (residual != "1")
+            tree.push_back(pair<unsigned long, string>(*(it++), residual));
+        else
+            it = indexes.erase(it);
+    }
 
     /// If no fitting word found
-    if (indexes.empty())
+    if (tree.empty())
         return;
 
     /// Start again recursively for each fitting word found
-    for (auto it = tree.at(str).begin(); it != tree.at(str).end(); it++) {
+    for (auto it = tree.begin(); it != tree.end(); it++) {
+        indexes.erase(indexes.begin(), indexes.find((*it).first));
+
         current.push_back(dict[(*it).first]);
 
         if ((*it).second != "")
-            build((*it).second, dict, indexes, tree, current, anagrams, max - 1);
+            build((*it).second, dict, indexes, current, anagrams, max - 1);
         else
             anagrams.push_back(current);
 
         current.pop_back();
     }
-
-    return;
 }
 
 /**
@@ -156,11 +138,11 @@ void build(string str, const Dictionary& dict, set<unsigned long> indexes, hashM
  * @return the container of generated anagrams.
  */
 vector<vector<string>> anagrams(const string& input, const Dictionary& dict, unsigned max) {
-    hashMap tree;
     set<unsigned long> indexes;
     vector<vector<string>> anagrams;
 
-    string str = alphaSort(cleanUp(input));
+    string str = cleanUp(input);
+    sort(str.begin(), str.end());
 
     int maxi = (int) max;
     if (maxi == 0)
@@ -169,7 +151,7 @@ vector<vector<string>> anagrams(const string& input, const Dictionary& dict, uns
     for (unsigned long i = 0; i < dict.size(); i++)
         indexes.insert(indexes.end(), i);
 
-    build(str, dict, indexes, tree, vector<string>(), anagrams, maxi);
+    build(str, dict, indexes, vector<string>(), anagrams, maxi);
 
     return anagrams;
 }
