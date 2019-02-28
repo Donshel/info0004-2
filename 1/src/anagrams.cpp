@@ -3,10 +3,7 @@
 
 #include <algorithm> /// std::sort
 
-#include <utility> /// std::pair
-#include <string>
 #include <set>
-#include <vector>
 
 #include "anagrams.hpp"
 
@@ -31,27 +28,34 @@ string cleanUp(string str) {
 }
 
 /**
- * Remove from one string all characters of another. One character is removed for each its occurences in the other string.
+ * Search if a string is a subset of another.
  *
  * @note both strings are supposed to be alphabetically sorted.
  *
- * @param str1, the string where are removed characters from.
- * @param str2, the other string.
- * @return the residual string, or "1" if str2 has character(s) that str1 hasn't.
+ * @param[in] str, a string.
+ * @param[in] sub, a supposed subset.
+ * @param[out] res, the residual.
+ * @return true if sub is a subset of str, false otherwise.
  */
-string removeFrom(string str1, string str2) {
-    auto pt = str1.begin();
+bool isSub(const string& str, const string& sub, string& res) {
+    if (str.length() < sub.length())
+        return false;
 
-    for (auto it = str2.begin(); it != str2.end(); it++) {
-        pt = find(pt, str1.end(), *it);
+    res = str;
+    auto it1 = sub.begin();
+    auto it2 = res.begin();
 
-        if (pt == str1.end())
-            return "1";
+    while (it1 != sub.end())
+        if (it2 == res.end() || *it1 < *it2)
+            return false;
+        else if (*it1 > *it2)
+            it2++;
+        else {
+            it2 = res.erase(it2);
+            it1++;
+        }
 
-        str1.erase(pt);
-    }
-
-    return str1;
+    return true;
 }
 
 /**
@@ -62,17 +66,17 @@ string removeFrom(string str1, string str2) {
  */
 Dictionary create_dictionary(const string& filename) {
     Dictionary dict;
-    string word;
+    string wrd, tmp;
     ifstream file;
 
     file.open(filename);
 
-    while (file >> word) {
-        word = cleanUp(word);
-        if (!word.empty()) {
-            string temp = word;
-            sort(temp.begin(), temp.end());
-            dict.push_back(pair<string, string>(word, temp));
+    while (file >> wrd) {
+        wrd = cleanUp(wrd);
+        if (!wrd.empty()) {
+            tmp = wrd;
+            sort(tmp.begin(), tmp.end());
+            dict.push_back(pair<string, string>(wrd, tmp));
         }
     }
 
@@ -85,41 +89,31 @@ Dictionary create_dictionary(const string& filename) {
  * Compute all anagrams of a string, recursively.
  *
  * @param[in] str, the string whose anagrams are searched.
- * @param[in] dict, the used dictionary.
- * @param[in] indexes, a container of indexes of words of the dictionary in which it is still useful to search anagrams.
- * @param[in] current, the container of previous words in the current anagram.
+ * @param[in] dict, the dictionary.
+ * @param[in] indexes, a container of indexes of the dictionary in which it is still useful to search anagrams.
+ * @param[in] wrds, the container of previous words in the current anagram.
  * @param[in, out] anagrams, the container of already-computed anagrams.
  * @param[in] max, the maximum number of words that are allowed to be added to current. If max is negative, there is no limit.
  */
-void build(string str, const Dictionary& dict, set<unsigned long> indexes, vector<string> current, vector<vector<string>>& anagrams, int max) {
+void build(string str, const Dictionary& dict, const set<unsigned long>& indexes, vector<string>& wrds, vector<vector<string>>& anagrams, int max) {
     if (max == 0)
         return;
 
-    vector<string> residuals;
+    string res;
+    set<unsigned long> findexes;
 
-    /// Search fitting words
-    for (auto it = indexes.begin(); it != indexes.end();) {
-        string residual = removeFrom(str, dict[*it].second);
+    for (auto it = indexes.rbegin(); it != indexes.rend(); it++)
+        if (isSub(str, dict[*it].second, res)) {
+            findexes.insert(findexes.begin(), *it);
+            wrds.push_back(dict[*it].first);
 
-        if (residual != "1") {
-            residuals.push_back(residual);
-            it++;
-        } else
-            it = indexes.erase(it);
-    }
+            if (!res.empty())
+                build(res, dict, findexes, wrds, anagrams, max - 1);
+            else
+                anagrams.push_back(wrds);
 
-    /// Start again recursively for each fitting word found
-    for (auto it = residuals.begin(); it != residuals.end(); it++) {
-        current.push_back(dict[*indexes.begin()].first);
-
-        if (!(*it).empty())
-            build(*it, dict, indexes, current, anagrams, max - 1);
-        else
-            anagrams.push_back(current);
-
-        current.pop_back();
-        indexes.erase(indexes.begin());
-    }
+            wrds.pop_back();
+        }
 }
 
 /**
@@ -133,6 +127,7 @@ void build(string str, const Dictionary& dict, set<unsigned long> indexes, vecto
 vector<vector<string>> anagrams(const string& input, const Dictionary& dict, unsigned max) {
     set<unsigned long> indexes;
     vector<vector<string>> anagrams;
+    vector<string> wrds;
 
     string str = cleanUp(input);
     sort(str.begin(), str.end());
@@ -144,7 +139,7 @@ vector<vector<string>> anagrams(const string& input, const Dictionary& dict, uns
     for (unsigned long i = 0; i < dict.size(); i++)
         indexes.insert(indexes.end(), i);
 
-    build(str, dict, indexes, vector<string>(), anagrams, maxi);
+    build(str, dict, indexes, wrds, anagrams, maxi);
 
     return anagrams;
 }
