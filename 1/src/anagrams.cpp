@@ -33,13 +33,13 @@ string cleanUp(string str) {
 /**
  * Remove from one string all characters of another. One character is removed for each its occurences in the other string.
  *
- * @param str1, the string where are removed characters from. str1 is supposed to be alphabetically sorted.
+ * @note both strings are supposed to be alphabetically sorted.
+ *
+ * @param str1, the string where are removed characters from.
  * @param str2, the other string.
  * @return the residual string, or "1" if str2 has character(s) that str1 hasn't.
  */
 string removeFrom(string str1, string str2) {
-    sort(str2.begin(), str2.end());
-
     auto pt = str1.begin();
 
     for (auto it = str2.begin(); it != str2.end(); it++) {
@@ -54,15 +54,11 @@ string removeFrom(string str1, string str2) {
     return str1;
 }
 
-typedef vector<string> Dictionary;
-
 /**
  * Create a dictionary from a file.
  *
- * @note The words in the file have to be lowercase.
- *
  * @param filename, the path to the file.
- * @return the created dictionary.
+ * @return the created dictionary. If no or empty file, return an empty Dictionary.
  */
 Dictionary create_dictionary(const string& filename) {
     Dictionary dict;
@@ -71,13 +67,14 @@ Dictionary create_dictionary(const string& filename) {
 
     file.open(filename);
 
-    if (!file) {
-        cout << "Unable to open file." << endl;
-        exit(1);
+    while (file >> word) {
+        word = cleanUp(word);
+        if (!word.empty()) {
+            string temp = word;
+            sort(temp.begin(), temp.end());
+            dict.push_back(pair<string, string>(word, temp));
+        }
     }
-
-    while (file >> word)
-        dict.push_back(word);
 
     file.close();
 
@@ -98,34 +95,30 @@ void build(string str, const Dictionary& dict, set<unsigned long> indexes, vecto
     if (max == 0)
         return;
 
-    vector<pair<unsigned long, string>> tree;
+    vector<string> residuals;
 
     /// Search fitting words
     for (auto it = indexes.begin(); it != indexes.end();) {
-        string residual = removeFrom(str, dict[*it]);
+        string residual = removeFrom(str, dict[*it].second);
 
-        if (residual != "1")
-            tree.push_back(pair<unsigned long, string>(*(it++), residual));
-        else
+        if (residual != "1") {
+            residuals.push_back(residual);
+            it++;
+        } else
             it = indexes.erase(it);
     }
 
-    /// If no fitting word found
-    if (tree.empty())
-        return;
-
     /// Start again recursively for each fitting word found
-    for (auto it = tree.begin(); it != tree.end(); it++) {
-        indexes.erase(indexes.begin(), indexes.find((*it).first));
+    for (auto it = residuals.begin(); it != residuals.end(); it++) {
+        current.push_back(dict[*indexes.begin()].first);
 
-        current.push_back(dict[(*it).first]);
-
-        if ((*it).second != "")
-            build((*it).second, dict, indexes, current, anagrams, max - 1);
+        if (!(*it).empty())
+            build(*it, dict, indexes, current, anagrams, max - 1);
         else
             anagrams.push_back(current);
 
         current.pop_back();
+        indexes.erase(indexes.begin());
     }
 }
 

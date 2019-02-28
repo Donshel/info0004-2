@@ -2,9 +2,10 @@
 #define ANAGRAMS
 
 #include <string>
+#include <utility> /// std::pair
 #include <vector>
 
-typedef std::vector<std::string> Dictionary;
+typedef std::vector<std::pair<std::string, std::string>> Dictionary;
 
 /**
  * Create a dictionary from a file.

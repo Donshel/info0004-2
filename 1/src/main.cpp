@@ -26,21 +26,19 @@ int main() {
     ofstream file;
     file.open("anagram.txt");
 
-    file << input + " in " << t << " secs" << "\n\n";
-    cout << t << " secs" << endl;
-    cout << endl;
+    file << input + " in " << t << " secs for " << vect.size() << " anagrams\n\n";
 
     for (auto it = vect.begin(); it != vect.end(); it++) {
         for (auto it2 = (*it).begin(); it2 != (*it).end(); *it2++) {
             file << *it2 + " ";
-            cout << *it2 + " ";
         }
 
         file << "\n";
-        cout << endl;
     }
 
     file.close();
+
+    cout << input + " in " << t << " secs for " << vect.size() << " anagrams" << endl;
 
     return 0;
 }
