@@ -1,5 +1,4 @@
 #include <fstream>
-#include <set>
 
 #include "anagrams.hpp"
 
@@ -92,16 +91,16 @@ Dictionary create_dictionary(const string& filename) {
  * @param[in,out] anagrams the container of already-computed anagrams.
  * @param[in] max the maximum number of words that are allowed to be added to current. If max is negative, there is no limit.
  */
-void build(const astring& astr, const Dictionary& dict, const set<unsigned long>& indexes, vector<string>& wrds, vector<vector<string>>& anagrams, int max) {
+void build(const astring& astr, const Dictionary& dict, const vector<unsigned long>& indexes, vector<string>& wrds, vector<vector<string>>& anagrams, int max) {
     if (max == 0)
         return;
 
     astring ares;
-    set<unsigned long> findexes;
+    vector<unsigned long> findexes;
 
-    for (auto it = indexes.rbegin(); it != indexes.rend(); it++)
+    for (auto it = indexes.begin(); it != indexes.end(); it++)
         if (isSub(astr, dict[*it].second, ares)) {
-            findexes.insert(findexes.begin(), *it);
+            findexes.push_back(*it);
             wrds.push_back(dict[*it].first);
 
             if (ares[0] > 0)
@@ -122,7 +121,7 @@ void build(const astring& astr, const Dictionary& dict, const set<unsigned long>
  * @return the container of generated anagrams.
  */
 vector<vector<string>> anagrams(const string& input, const Dictionary& dict, unsigned max) {
-    set<unsigned long> indexes;
+    vector<unsigned long> indexes;
     vector<vector<string>> anagrams;
     vector<string> wrds;
 
@@ -132,8 +131,9 @@ vector<vector<string>> anagrams(const string& input, const Dictionary& dict, uns
     if (maxi == 0)
         maxi = -1;
 
-    for (unsigned long i = 0; i < dict.size(); i++)
-        indexes.insert(indexes.end(), i);
+    for (unsigned long i = dict.size() - 1; i != 0; i--)
+        indexes.push_back(i);
+    indexes.push_back(0);
 
     build(astr, dict, indexes, wrds, anagrams, maxi);
 
