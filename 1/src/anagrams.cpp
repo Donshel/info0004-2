@@ -10,7 +10,7 @@ using namespace std;
  * @param str a string to clean up.
  * @return the cleaned up string.
  */
-string cleanUp(string str) {
+static string cleanUp(string str) {
     for (auto it = str.begin(); it != str.end();)
         if (*it >= 'a' && *it <= 'z')
             it++;
@@ -32,7 +32,7 @@ typedef std::array<short, 27> astring;
  * @param str a string.
  * @return the transformed string.
  */
-astring atransform(string str) {
+static astring atransform(string str) {
     astring astr = {(short) str.length()};
     for (char c : str)
         astr[c - 'a' + 1]++;
@@ -48,37 +48,13 @@ astring atransform(string str) {
  * @param[out] ares the residual.
  * @return true if asub is a subset of astr, false otherwise.
  */
-bool isSub(const astring& astr, const astring& asub, astring& ares) {
+static bool isSub(const astring& astr, const astring& asub, astring& ares) {
     ares = astr;
     for (unsigned i = 0; i < 27; i++)
         if (asub[i] > 0 && (ares[i] -= asub[i]) < 0)
             return false;
 
     return true;
-}
-
-/**
- * Create a dictionary from a file.
- *
- * @param filename the path to the file.
- * @return the created dictionary. If non-existent or empty file, return an empty Dictionary.
- */
-Dictionary create_dictionary(const string& filename) {
-    Dictionary dict;
-    string wrd;
-    ifstream file;
-
-    file.open(filename);
-
-    while (file >> wrd) {
-        wrd = cleanUp(wrd);
-        if (!wrd.empty())
-            dict.push_back(pair<string, astring>(wrd, atransform(wrd)));
-    }
-
-    file.close();
-
-    return dict;
 }
 
 /**
@@ -91,7 +67,7 @@ Dictionary create_dictionary(const string& filename) {
  * @param[in,out] anagrams the container of already-computed anagrams.
  * @param[in] max the maximum number of words that are allowed to be added to current. If max is negative, there is no limit.
  */
-void build(const astring& astr, const Dictionary& dict, const vector<unsigned long>& indexes, vector<string>& wrds, vector<vector<string>>& anagrams, int max) {
+static void build(const astring& astr, const Dictionary& dict, const vector<unsigned long>& indexes, vector<string>& wrds, vector<vector<string>>& anagrams, int max) {
     if (max == 0)
         return;
 
@@ -112,14 +88,6 @@ void build(const astring& astr, const Dictionary& dict, const vector<unsigned lo
         }
 }
 
-/**
- * Generate all anagrams of a string.
- *
- * @param input the string whose anagrams are searched.
- * @param dict the used dictionary.
- * @param max the maximum number of words that are allowed in anagrams. If max is null, there is no limit.
- * @return the container of generated anagrams.
- */
 vector<vector<string>> anagrams(const string& input, const Dictionary& dict, unsigned max) {
     vector<unsigned long> indexes;
     vector<vector<string>> anagrams;
@@ -138,4 +106,22 @@ vector<vector<string>> anagrams(const string& input, const Dictionary& dict, uns
     build(astr, dict, indexes, wrds, anagrams, maxi);
 
     return anagrams;
+}
+
+Dictionary create_dictionary(const string& filename) {
+    Dictionary dict;
+    string wrd;
+    ifstream file;
+
+    file.open(filename);
+
+    while (file >> wrd) {
+        wrd = cleanUp(wrd);
+        if (!wrd.empty())
+            dict.push_back(pair<string, astring>(wrd, atransform(wrd)));
+    }
+
+    file.close();
+
+    return dict;
 }
