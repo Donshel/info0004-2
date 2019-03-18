@@ -1,25 +1,23 @@
 #include <fstream>
+#include <algorithm>
 
 #include "anagrams.hpp"
 
 using namespace std;
 
 /**
- * Remove, from a string, undesired characters such as spaces, figures, etc. and replace uppercases by corresponding lowercases.
+ * Remove from a string undesired characters such as spaces, figures, etc. and replace uppercases by corresponding lowercases.
  *
- * @param str a string to clean up.
- * @return the cleaned up string.
+ * @param[in,out] str a string to clean up.
  */
-static string cleanUp(string str) {
+static void cleanUp(string& str) {
     for (auto it = str.begin(); it != str.end();)
-        if (*it >= 'a' && *it <= 'z')
-            it++;
-        else if (*it >= 'A' && *it <= 'Z')
-            *(it++) += 32;
+        if (islower(*it))
+            ++it;
+        else if (isupper(*it))
+            *(it++) += 'a' - 'A';
         else
             it = str.erase(it);
-
-    return str;
 }
 
 typedef std::array<short, 27> astring;
@@ -35,7 +33,7 @@ typedef std::array<short, 27> astring;
 static astring atransform(string str) {
     astring astr = {(short) str.length()};
     for (char c : str)
-        astr[c - 'a' + 1]++;
+        ++astr[c - 'a' + 1];
 
     return astr;
 }
@@ -45,65 +43,84 @@ static astring atransform(string str) {
  *
  * @param[in] astr an astring.
  * @param[in] asub a supposed subset.
- * @param[out] ares the residual.
  * @return true if asub is a subset of astr, false otherwise.
  */
-static bool isSub(const astring& astr, const astring& asub, astring& ares) {
-    ares = astr;
-    for (unsigned i = 0; i < 27; i++)
-        if (asub[i] > 0 && (ares[i] -= asub[i]) < 0)
+static bool isSub(const astring& astr, const astring& asub) {
+    for (unsigned i = 0; i < 27; ++i)
+        if (astr[i] < asub[i])
             return false;
 
     return true;
 }
 
 /**
+ * Search if an astring is a subset of another and compute the residual if so.
+ *
+ * @param[in] astr an astring.
+ * @param[in] asub a supposed subset.
+ * @param[out] ares the residual.
+ * @return true if asub is a subset of astr, false otherwise.
+ */
+static bool isRes(const astring& astr, const astring& asub, astring& ares) {
+    if (astr[0] < asub[0])
+        return false;
+
+    ares = astr;
+    for (unsigned i = 1; i < 27; ++i)
+        if (asub[i] > 0 && (ares[i] -= asub[i]) < 0)
+            return false;
+
+    ares[0] -= asub[0];
+
+    return true;
+}
+
+typedef Dictionary::const_iterator reference;
+
+/**
  * Compute all anagrams of an astring, recursively.
  *
  * @param[in] astr the astring whose anagrams are searched.
- * @param[in] dict the dictionary.
- * @param[in] indexes a container of indexes of the dictionary in which it is still useful to search anagrams.
+ * @param[in] references a container of references to words in which it is still useful to search anagrams.
  * @param[in] wrds the container of previous words in the current anagram. In spite of manipulations, wrds returns to its initial state after execution.
  * @param[in,out] anagrams the container of already-computed anagrams.
  * @param[in] max the maximum number of words that are allowed to be added to current. If max is negative, there is no limit.
  */
-static void build(const astring& astr, const Dictionary& dict, const vector<unsigned long>& indexes, vector<string>& wrds, vector<vector<string>>& anagrams, int max) {
+static void build(const astring& astr, const vector<reference>& references, vector<string>& wrds, vector<vector<string>>& anagrams, int max) {
     if (max == 0)
         return;
 
     astring ares;
-    vector<unsigned long> findexes;
+    vector<reference> newreferences;
 
-    for (auto it = indexes.begin(); it != indexes.end(); it++)
-        if (isSub(astr, dict[*it].second, ares)) {
-            findexes.push_back(*it);
-            wrds.push_back(dict[*it].first);
+    for (auto it = references.begin(); it != references.end(); ++it)
+        if (isRes(astr, (**it).second, ares)) {
+            newreferences.push_back(*it);
 
+            wrds.push_back((**it).first);
             if (ares[0] > 0)
-                build(ares, dict, findexes, wrds, anagrams, max - 1);
+                build(ares, newreferences, wrds, anagrams, max - 1);
             else
                 anagrams.push_back(wrds);
-
             wrds.pop_back();
         }
 }
 
 vector<vector<string>> anagrams(const string& input, const Dictionary& dict, unsigned max) {
-    vector<unsigned long> indexes;
+    vector<reference> references;
     vector<vector<string>> anagrams;
     vector<string> wrds;
 
-    astring astr = atransform(cleanUp(input));
+    string str = input;
+    cleanUp(str);
+    astring astr = atransform(str);
 
-    int maxi = max;
-    if (maxi == 0)
-        maxi = -1;
+    for (auto it = dict.begin(); it != dict.end(); ++it)
+        if (isSub(astr, (*it).second))
+            references.push_back(it);
+    reverse(references.begin(), references.end());
 
-    for (unsigned long i = dict.size() - 1; i != 0; i--)
-        indexes.push_back(i);
-    indexes.push_back(0);
-
-    build(astr, dict, indexes, wrds, anagrams, maxi);
+    build(astr, references, wrds, anagrams, max == 0 ? -1 : max);
 
     return anagrams;
 }
@@ -116,7 +133,7 @@ Dictionary create_dictionary(const string& filename) {
     file.open(filename);
 
     while (file >> wrd) {
-        wrd = cleanUp(wrd);
+        cleanUp(wrd);
         if (!wrd.empty())
             dict.push_back(pair<string, astring>(wrd, atransform(wrd)));
     }
