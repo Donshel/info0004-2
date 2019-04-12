@@ -1,5 +1,3 @@
-// g++ -std=c++11 -Wall -Wextra src/main.cpp src/anagrams.cpp -o bin/anagrams
-
 #include <chrono>
 #include <iostream>
 #include <fstream>
