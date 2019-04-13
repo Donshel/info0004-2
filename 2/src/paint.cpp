@@ -79,9 +79,19 @@ void Cursor::backspace() {
 	C = input[++l].length();
 }
 
+void Name::parse(Cursor& cursor, vector<string>& names) {
+	string name = cursor.nextWord();
+	Name::valid(name);
+
+	if (find(names.begin(), names.end(), name) != names.end())
+		throw string("error: already used name " + name);
+
+	names.push_back(name);
+}
+
 void Name::valid(const string& name) {
 	if (name.empty())
-		throw string("error: empty name");
+		throw string("error: missing name");
 
 	auto it = name.begin();
 	if (!isalpha(*it))
@@ -90,6 +100,18 @@ void Name::valid(const string& name) {
 	while (++it != name.end())
 		if (!isalnum(*it) && *it != '_')
 			throw string("error: invalid name " + name);
+}
+
+void Name::exist(const string& name, const vector<string>& names) {
+	Name::valid(name);
+
+	if (find(names.begin(), names.end(), name) == names.end())
+		throw string("error: unknown name " + name);
+}
+
+void Name::parseExist(Cursor& cursor, const vector<string>& names) {
+	string name = cursor.nextWord();
+	Name::exist(name, names);
 }
 
 void Number::parse(Cursor& cursor, const vector<string>& shapes) {
@@ -132,21 +154,21 @@ void Number::parse(Cursor& cursor, const vector<string>& shapes) {
 	}
 }
 
-void Number::valid(const string& word) {
-	if (word.empty())
+void Number::valid(const string& number) {
+	if (number.empty())
 		throw string("error: invalid number");
 
-	for (auto it = word.begin(); it != word.end(); it++)
+	for (auto it = number.begin(); it != number.end(); it++)
 		if (!isdigit(*it))
-			throw string("error: invalid number " + word);
+			throw string("error: invalid number " + number);
 }
 
 void Point::parse(Cursor& cursor, const vector<string>& shapes) {
 	string word = cursor.nextWord();
 
 	if (word == "{") {
-		Number::parse(cursor, shapes);
-		Number::parse(cursor, shapes);
+		for (int i = 0; i < 2; i++)
+			Number::parse(cursor, shapes);
 
 		if (cursor.nextWord() != "}")
 			throw string("error: missing }");
@@ -171,22 +193,17 @@ void Point::parse(Cursor& cursor, const vector<string>& shapes) {
 		}
 	} else {
 		size_t pos = word.find('.');
+
 		if (pos == string::npos)
 			throw string("error: invalid point " + word);
 
-		string shape_name = word.substr(0, pos);
-		Name::valid(shape_name);
-
-		if (find(shapes.begin(), shapes.end(), shape_name) == shapes.end())
-			throw string("error: unknown shape " + shape_name);
-
-		string point_name = word.substr(pos + 1);
-		Name::valid(point_name);
+		Name::exist(word.substr(0, pos), shapes);
+		Name::valid(word.substr(pos + 1));
 	}
 }
 
 void Color::keyParse(Cursor& cursor, vector<string>& colors, const vector<string>& shapes) {
-	Color::nameParse(cursor, colors, shapes);
+	Name::parse(cursor, colors);
 	Color::parse(cursor, colors, shapes);
 }
 
@@ -194,104 +211,72 @@ void Color::parse(Cursor& cursor, const vector<string>& colors, const vector<str
 	string word = cursor.nextWord();
 
 	if (word == "{") {
-		Number::parse(cursor, shapes);
-		Number::parse(cursor, shapes);
-		Number::parse(cursor, shapes);
+		for (int i = 0; i < 3; i++)
+			Number::parse(cursor, shapes);
 
 		if (cursor.nextWord() != "}")
 			throw string("error: missing }");
 	} else {
-		Name::valid(word);
-
-		if (find(colors.begin(), colors.end(), word) == colors.end())
-			throw string("error: unknown color " + word);
+		Name::exist(word, colors);
 	}
 }
 
-void Color::nameParse(Cursor& cursor, vector<string>& colors, const vector<string>& shapes) {
-	string word = cursor.nextWord();
-	Name::valid(word);
-
-	if (find(colors.begin(), colors.end(), word) != colors.end() || find(shapes.begin(), shapes.end(), word) != shapes.end())
-		throw string("error: already used name " + word);
-
-	colors.push_back(word);
-}
-
 void Fill::keyParse(Cursor& cursor, const vector<string>& colors, const vector<string>& shapes) {
-	Shape::parse(cursor, shapes);
+	Name::parseExist(cursor, shapes);
 	Color::parse(cursor, colors, shapes);
 }
 
-void Shape::parse(Cursor& cursor, const vector<string>& shapes) {
-	string word = cursor.nextWord();
-	Name::valid(word);
-
-	if (find(shapes.begin(), shapes.end(), word) == shapes.end())
-		throw string("error: unknown shape " + word);
-}
-
-void Shape::nameParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes) {
-	string word = cursor.nextWord();
-	Name::valid(word);
-
-	if (find(colors.begin(), colors.end(), word) != colors.end() || find(shapes.begin(), shapes.end(), word) != shapes.end())
-		throw string("error: already used name " + word);
-
-	shapes.push_back(word);
-}
-
-void Circle::keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes) {
-	Shape::nameParse(cursor, colors, shapes);
+void Circle::keyParse(Cursor& cursor, vector<string>& shapes) {
+	Name::parse(cursor, shapes);
 	Point::parse(cursor, shapes);
 	Number::parse(cursor, shapes);
 }
 
-void Rectangle::keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes) {
-	Shape::nameParse(cursor, colors, shapes);
+void Rectangle::keyParse(Cursor& cursor, vector<string>& shapes) {
+	Name::parse(cursor, shapes);
 	Point::parse(cursor, shapes);
 	for (int i = 0; i < 2; i++)
 		Number::parse(cursor, shapes);
 }
 
 
-void Triangle::keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes) {
-	Shape::nameParse(cursor, colors, shapes);
+void Triangle::keyParse(Cursor& cursor,vector<string>& shapes) {
+	Name::parse(cursor, shapes);
 	for (int i = 0; i < 3; i++)
 		Point::parse(cursor, shapes);
 }
 
-void Shift::keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes) {
-	Shape::nameParse(cursor, colors, shapes);
+void Shift::keyParse(Cursor& cursor, vector<string>& shapes) {
+	Name::parse(cursor, shapes);
 	Point::parse(cursor, shapes);
-	Shape::parse(cursor, shapes);
+	Name::parseExist(cursor, shapes);
 }
 
-void Rotation::keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes) {
-	Shape::nameParse(cursor, colors, shapes);
+void Rotation::keyParse(Cursor& cursor, vector<string>& shapes) {
+	Name::parse(cursor, shapes);
 	Number::parse(cursor, shapes);
 	Point::parse(cursor, shapes);
-	Shape::parse(cursor, shapes);
+	Name::parseExist(cursor, shapes);
 }
 
-void Union::keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes) {
-	Shape::nameParse(cursor, colors, shapes);
+void Union::keyParse(Cursor& cursor, vector<string>& shapes) {
+	Name::parse(cursor, shapes);
 
 	if (cursor.nextWord() != "{")
 		throw string("error: missing {");
 
-	Shape::parse(cursor, shapes);
+	Name::parseExist(cursor, shapes);
 	while (cursor.nextChar() != '}')
-		Shape::parse(cursor, shapes);
+		Name::parseExist(cursor, shapes);
 
 	cursor.nextWord();
 }
 
-void Difference::keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes) {
-	Shape::nameParse(cursor, colors, shapes);
+void Difference::keyParse(Cursor& cursor, vector<string>& shapes) {
+	Name::parse(cursor, shapes);
 
 	for (int i = 0; i < 2; i++)
-		Shape::parse(cursor, shapes);
+		Name::parseExist(cursor, shapes);
 }
 
 void Frame::keyParse(Cursor& cursor, const vector<string>& shapes) {
@@ -330,19 +315,19 @@ void Paint::parse(const vector<string>& input) {
 			if (keyword == Color::keyword)
 				Color::keyParse(cursor, colors, shapes);
 			else if (keyword == Circle::keyword)
-				Circle::keyParse(cursor, colors, shapes);
+				Circle::keyParse(cursor, shapes);
 			else if (keyword == Rectangle::keyword)
-				Rectangle::keyParse(cursor, colors, shapes);
+				Rectangle::keyParse(cursor, shapes);
 			else if (keyword == Triangle::keyword)
-				Triangle::keyParse(cursor, colors, shapes);
+				Triangle::keyParse(cursor, shapes);
 			else if (keyword == Shift::keyword)
-				Shift::keyParse(cursor, colors, shapes);
+				Shift::keyParse(cursor, shapes);
 			else if (keyword == Rotation::keyword)
-				Rotation::keyParse(cursor, colors, shapes);
+				Rotation::keyParse(cursor,shapes);
 			else if (keyword == Union::keyword)
-				Union::keyParse(cursor, colors, shapes);
+				Union::keyParse(cursor, shapes);
 			else if (keyword == Difference::keyword)
-				Difference::keyParse(cursor, colors, shapes);
+				Difference::keyParse(cursor, shapes);
 			else if (keyword == Fill::keyword) {
 				fillCount++;
 				Fill::keyParse(cursor, colors, shapes);

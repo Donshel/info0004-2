@@ -22,14 +22,17 @@ class Cursor {
 
 class Name {
 	public:
+		static void parse(Cursor& cursor, vector<string>& names);
 		static void valid(const string& name);
+		static void exist(const string& name, const vector<string>& names);
+		static void parseExist(Cursor& cursor, const vector<string>& names);
 };
 
 class Number {
 	public:
 		static void parse(Cursor& cursor, const vector<string>& shapes);
 	private:
-		static void valid(const string& word);
+		static void valid(const string& number);
 };
 
 class Point {
@@ -42,8 +45,6 @@ class Color {
 		static const string keyword;
 		static void keyParse(Cursor& cursor, vector<string>& colors, const vector<string>& shapes);
 		static void parse(Cursor& cursor, const vector<string>& colors, const vector<string>& shapes);
-	protected:
-		static void nameParse(Cursor& cursor, vector<string>& colors, const vector<string>& shapes);
 };
 
 class Fill {
@@ -52,53 +53,48 @@ class Fill {
 		static void keyParse(Cursor& cursor, const vector<string>& colors, const vector<string>& shapes);
 };
 
-class Shape {
-	public:
-		static void parse(Cursor& cursor, const vector<string>& shapes);
-	protected:
-		static void nameParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes);
-};
+class Shape {};
 
 class Circle : public Shape {
 	public:
 		static const string keyword;
-		static void keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes);
+		static void keyParse(Cursor& cursor, vector<string>& shapes);
 };
 
 class Rectangle : public Shape {
 	public:
 		static const string keyword;
-		static void keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes);
+		static void keyParse(Cursor& cursor, vector<string>& shapes);
 };
 
 class Triangle : public Shape {
 	public:
 		static const string keyword;
-		static void keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes);
+		static void keyParse(Cursor& cursor, vector<string>& shapes);
 };
 
 class Shift : public Shape {
 	public:
 		static const string keyword;
-		static void keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes);
+		static void keyParse(Cursor& cursor, vector<string>& shapes);
 };
 
 class Rotation : public Shape {
 	public:
 		static const string keyword;
-		static void keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes);
+		static void keyParse(Cursor& cursor, vector<string>& shapes);
 };
 
 class Union : public Shape {
 	public:
 		static const string keyword;
-		static void keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes);
+		static void keyParse(Cursor& cursor, vector<string>& shapes);
 };
 
 class Difference : public Shape {
 	public:
 		static const string keyword;
-		static void keyParse(Cursor& cursor, const vector<string>& colors, vector<string>& shapes);
+		static void keyParse(Cursor& cursor, vector<string>& shapes);
 };
 
 class Frame {
