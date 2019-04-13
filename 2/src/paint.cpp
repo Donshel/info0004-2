@@ -28,11 +28,13 @@ char Cursor::nextChar() {
 
 	w = 0;
 	
-	if (b == C) {
+	if (b == C || input[l][b] == '#') {
 		if (this->last())
 			return ' ';
-		else
-			return input[l + 1][0];
+		else {
+			this->backspace();
+			return this->nextChar();
+		}
 	}
 
 	return input[l][b];
