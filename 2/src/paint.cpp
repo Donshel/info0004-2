@@ -54,13 +54,11 @@ string Cursor::nextWord() {
 	unsigned int b = c;
 	c++;
 
-	unsigned int dot_count = 0;
-
 	char ch = input[l][b];
 	if (ch != ')' && ch != '}' && ch != '(' && ch != '{')
 		while (c < C) {
 			ch = input[l][c];
-			if (isspace(ch) || ch == ')' || ch == '}' || ch == '(' || ch == '{' || (ch == '.' && dot_count++ > 0) || ch == '#')
+			if (isspace(ch) || ch == ')' || ch == '}' || ch == '(' || ch == '{' || ch == '#')
 				break;
 			c++;
 		}
@@ -117,7 +115,39 @@ void Name::parseExist(Cursor& cursor, const vector<string>& names) {
 void Number::parse(Cursor& cursor, const vector<string>& shapes) {
 	char op = cursor.nextChar();
 
-	if (isdigit(op) || op == '-' || op == '+' || op == '.') {
+	if (isalpha(op)) {
+		string word = cursor.nextWord();
+
+		size_t pos1 = word.find('.');
+
+		if (pos1 == string::npos)
+			throw string("error: invalid number " + word);
+
+		size_t pos2 = word.find('.', pos1 + 1);
+
+		if (pos2 == string::npos)
+			throw string("error: invalid number " + word);
+
+		Name::exist(word.substr(0, pos1), shapes);
+		Name::valid(word.substr(pos1 + 1, pos2 - pos1 - 1));
+
+		word = word.substr(pos2 + 1);
+
+		if (word != "x" && word != "y")
+			throw string("error: invalid projector " + word);
+	} else if (op == '(' || op == '{') {
+		Point::parse(cursor, shapes);
+
+		char op = cursor.nextChar();
+
+		if (op != '.')
+			throw string("error: missing projector");
+
+		string word = cursor.nextWord().substr(1);
+
+		if (word != "x" && word != "y")
+			throw string("error: invalid projector " + word);
+	} else {
 		string word = cursor.nextWord();
 
 		if (op == '-' || op == '+')
@@ -139,18 +169,6 @@ void Number::parse(Cursor& cursor, const vector<string>& shapes) {
 					Number::valid(end);
 			}
 		}
-	} else {
-		Point::parse(cursor, shapes);
-
-		string word = cursor.nextWord();
-
-		if (word[0] != '.')
-			throw string("error: invalid projector " + word);
-
-		word = word.substr(1);
-
-		if (word != "x" && word != "y")
-			throw string("error: invalid projector " + word);
 	}
 }
 
