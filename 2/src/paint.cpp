@@ -84,29 +84,29 @@ void Name::parse(Cursor& cursor, vector<string>& names) {
 	Name::valid(name);
 
 	if (find(names.begin(), names.end(), name) != names.end())
-		throw string("error: already used name " + name);
+		throw string("already used name " + name);
 
 	names.push_back(name);
 }
 
 void Name::valid(const string& name) {
 	if (name.empty())
-		throw string("error: missing name");
+		throw string("expected name, got empty");
 
 	auto it = name.begin();
 	if (!isalpha(*it))
-		throw string("error: invalid name " + name);
+		throw string("invalid first character " + string(1, *it));
 
 	while (++it != name.end())
 		if (!isalnum(*it) && *it != '_')
-			throw string("error: invalid name " + name);
+			throw string("invalid character " + string(1, *it));
 }
 
 void Name::exist(const string& name, const vector<string>& names) {
 	Name::valid(name);
 
 	if (find(names.begin(), names.end(), name) == names.end())
-		throw string("error: unknown name " + name);
+		throw string("unknown name " + name);
 }
 
 void Name::parseExist(Cursor& cursor, const vector<string>& names) {
@@ -123,185 +123,247 @@ void Number::parse(Cursor& cursor, const vector<string>& shapes) {
 		size_t pos1 = word.find('.');
 
 		if (pos1 == string::npos)
-			throw string("error: invalid number " + word);
+			throw string("expected number, got " + word);
 
 		size_t pos2 = word.find('.', pos1 + 1);
 
 		if (pos2 == string::npos)
-			throw string("error: invalid number " + word);
+			throw string("expected number, got point " + word);
 
-		Name::exist(word.substr(0, pos1), shapes);
-		Name::valid(word.substr(pos1 + 1, pos2 - pos1 - 1));
+		try {
+			Name::exist(word.substr(0, pos1), shapes);
+			Name::valid(word.substr(pos1 + 1, pos2 - pos1 - 1));
 
-		word = word.substr(pos2 + 1);
+			string p = word.substr(pos2 + 1);
 
-		if (word != "x" && word != "y")
-			throw string("error: invalid projector " + word);
+			if (p != "x" && p != "y")
+				throw string("expected x or y, got " + p);
+		} catch (string& e) {
+			throw string(e + " -> invalid number " + word);
+		}
 	} else if (op == '(' || op == '{') {
-		Point::parse(cursor, shapes);
+		try {
+			Point::parse(cursor, shapes);
 
-		char op = cursor.nextChar();
+			char op = cursor.nextChar();
 
-		if (op != '.')
-			throw string("error: missing projector");
+			if (op != '.')
+				throw string("expected .x or .y");
 
-		string word = cursor.nextWord().substr(1);
+			string p = cursor.nextWord().substr(1);
 
-		if (word != "x" && word != "y")
-			throw string("error: invalid projector " + word);
+			if (p != "x" && p != "y")
+				throw string("expected x or y, got " + p);
+		} catch (string& e) {
+			throw string(e + " -> invalid number");
+		}
 	} else {
 		string word = cursor.nextWord();
 
-		if (op == '-' || op == '+')
-			word = word.substr(1);
+		try {
+			if (op == '-' || op == '+')
+				word = word.substr(1);
 
-		if (word[0] == '.') {
-			word = word.substr(1);
-			Number::valid(word);
-		} else {
-			size_t pos = word.find('.');
-
-			if (pos == string::npos)
+			if (word[0] == '.') {
+				word = word.substr(1);
 				Number::valid(word);
-			else {
-				Number::valid(word.substr(0, pos));
+			} else {
+				size_t pos = word.find('.');
 
-				string end = word.substr(pos + 1);
-				if (!end.empty())
-					Number::valid(end);
+				if (pos == string::npos)
+					Number::valid(word);
+				else {
+					Number::valid(word.substr(0, pos));
+
+					string end = word.substr(pos + 1);
+					if (!end.empty())
+						Number::valid(end);
+				}
 			}
+		} catch (string& e) {
+			throw string(e + " -> invalid number " + word);
 		}
 	}
 }
 
 void Number::valid(const string& number) {
 	if (number.empty())
-		throw string("error: invalid number");
+		throw string("expected digits, got empty");
 
 	for (auto it = number.begin(); it != number.end(); it++)
 		if (!isdigit(*it))
-			throw string("error: invalid number " + number);
+			throw string("invalid character " + string(1, *it));
 }
 
 void Point::parse(Cursor& cursor, const vector<string>& shapes) {
 	string word = cursor.nextWord();
 
-	if (word == "{") {
-		for (int i = 0; i < 2; i++)
-			Number::parse(cursor, shapes);
+	try {
+		if (word == "{") {
+			for (int i = 0; i < 2; i++)
+				Number::parse(cursor, shapes);
 
-		if (cursor.nextWord() != "}")
-			throw string("error: missing }");
-	} else if (word == "(") {
-		string op = cursor.nextWord();
+			if (cursor.nextWord() != "}")
+				throw string("missing }");
+		} else if (word == "(") {
+			string op = cursor.nextWord();
 
-		if (op == "+" || op == "-") {
-			Point::parse(cursor, shapes);
-
-			while (cursor.nextChar() != ')')
+			if (op == "+" || op == "-") {
 				Point::parse(cursor, shapes);
 
-			cursor.nextWord();
-		} else if (op == "*" || op == "/") {
-			Point::parse(cursor, shapes);
-			Number::parse(cursor, shapes);
+				while (cursor.nextChar() != ')')
+					Point::parse(cursor, shapes);
 
-			if (cursor.nextWord() != ")")
-				throw string("error: missing )");
+				cursor.nextWord();
+			} else if (op == "*" || op == "/") {
+				Point::parse(cursor, shapes);
+				Number::parse(cursor, shapes);
+
+				if (cursor.nextWord() != ")")
+					throw string("missing )");
+			} else {
+				throw string("expected operator (+, -, * or /), got " + op);
+			}
 		} else {
-			throw string("error: invalid operator " + op);
+			size_t pos = word.find('.');
+
+			if (pos == string::npos)
+				throw string("expected point, got" + word);
+
+			Name::exist(word.substr(0, pos), shapes);
+			Name::valid(word.substr(pos + 1));
 		}
-	} else {
-		size_t pos = word.find('.');
-
-		if (pos == string::npos)
-			throw string("error: invalid point " + word);
-
-		Name::exist(word.substr(0, pos), shapes);
-		Name::valid(word.substr(pos + 1));
+	} catch (string& e) {
+		throw string(e + " -> invalid point");
 	}
 }
 
 void Color::keyParse(Cursor& cursor, vector<string>& colors, const vector<string>& shapes) {
-	Name::parse(cursor, colors);
-	Color::parse(cursor, colors, shapes);
+	try {
+		Name::parse(cursor, colors);
+		Color::parse(cursor, colors, shapes);
+	} catch (string& e) {
+		throw string(e + " -> invalid color declaration");
+	}
 }
 
 void Color::parse(Cursor& cursor, const vector<string>& colors, const vector<string>& shapes) {
 	string word = cursor.nextWord();
 
-	if (word == "{") {
-		for (int i = 0; i < 3; i++)
-			Number::parse(cursor, shapes);
+	try {
+		if (word == "{") {
+			for (int i = 0; i < 3; i++)
+				Number::parse(cursor, shapes);
 
-		if (cursor.nextWord() != "}")
-			throw string("error: missing }");
-	} else {
-		Name::exist(word, colors);
+			if (cursor.nextWord() != "}")
+				throw string("missing }");
+		} else {
+			Name::exist(word, colors);
+		}
+	} catch (string& e) {
+		throw string(e + " -> invalid color");
 	}
 }
 
 void Fill::keyParse(Cursor& cursor, const vector<string>& colors, const vector<string>& shapes) {
-	Name::parseExist(cursor, shapes);
-	Color::parse(cursor, colors, shapes);
+	try {
+		Name::parseExist(cursor, shapes);
+		Color::parse(cursor, colors, shapes);
+	} catch (string& e) {
+		throw string(e + " -> invalid fill declaration");
+	}
 }
 
 void Circle::keyParse(Cursor& cursor, vector<string>& shapes) {
-	Name::parse(cursor, shapes);
-	Point::parse(cursor, shapes);
-	Number::parse(cursor, shapes);
+	try {
+		Name::parse(cursor, shapes);
+		Point::parse(cursor, shapes);
+		Number::parse(cursor, shapes);
+	} catch (string& e) {
+		throw string(e + " -> invalid circle declaration");
+	}
 }
 
 void Rectangle::keyParse(Cursor& cursor, vector<string>& shapes) {
-	Name::parse(cursor, shapes);
-	Point::parse(cursor, shapes);
-	for (int i = 0; i < 2; i++)
-		Number::parse(cursor, shapes);
+	try {
+		Name::parse(cursor, shapes);
+		Point::parse(cursor, shapes);
+
+		for (int i = 0; i < 2; i++)
+			Number::parse(cursor, shapes);
+	} catch (string& e) {
+		throw string(e + " -> invalid rectangle declaration");
+	}
 }
 
 
 void Triangle::keyParse(Cursor& cursor,vector<string>& shapes) {
-	Name::parse(cursor, shapes);
-	for (int i = 0; i < 3; i++)
-		Point::parse(cursor, shapes);
+	try {
+		Name::parse(cursor, shapes);
+
+		for (int i = 0; i < 3; i++)
+			Point::parse(cursor, shapes);
+	} catch (string& e) {
+		throw string(e + " -> invalid triangle declaration");
+	}
 }
 
 void Shift::keyParse(Cursor& cursor, vector<string>& shapes) {
-	Name::parse(cursor, shapes);
-	Point::parse(cursor, shapes);
-	Name::parseExist(cursor, shapes);
+	try {
+		Name::parse(cursor, shapes);
+		Point::parse(cursor, shapes);
+		Name::parseExist(cursor, shapes);
+	} catch (string& e) {
+		throw string(e + " -> invalid shift declaration");
+	}
 }
 
 void Rotation::keyParse(Cursor& cursor, vector<string>& shapes) {
-	Name::parse(cursor, shapes);
-	Number::parse(cursor, shapes);
-	Point::parse(cursor, shapes);
-	Name::parseExist(cursor, shapes);
+	try {
+		Name::parse(cursor, shapes);
+		Number::parse(cursor, shapes);
+		Point::parse(cursor, shapes);
+		Name::parseExist(cursor, shapes);
+	} catch (string& e) {
+		throw string(e + " -> invalid rotation declaration");
+	}
 }
 
 void Union::keyParse(Cursor& cursor, vector<string>& shapes) {
-	Name::parse(cursor, shapes);
+	try {
+		Name::parse(cursor, shapes);
 
-	if (cursor.nextWord() != "{")
-		throw string("error: missing {");
+		if (cursor.nextWord() != "{")
+			throw string("missing {");
 
-	Name::parseExist(cursor, shapes);
-	while (cursor.nextChar() != '}')
 		Name::parseExist(cursor, shapes);
+		while (cursor.nextChar() != '}')
+			Name::parseExist(cursor, shapes);
 
-	cursor.nextWord();
+		cursor.nextWord();
+	} catch (string& e) {
+		throw string(e + " -> invalid union declaration");
+	}
 }
 
 void Difference::keyParse(Cursor& cursor, vector<string>& shapes) {
-	Name::parse(cursor, shapes);
+	try {
+		Name::parse(cursor, shapes);
 
-	for (int i = 0; i < 2; i++)
-		Name::parseExist(cursor, shapes);
+		for (int i = 0; i < 2; i++)
+			Name::parseExist(cursor, shapes);
+	} catch (string& e) {
+		throw string(e + " -> invalid difference declaration");
+	}
 }
 
 void Frame::keyParse(Cursor& cursor, const vector<string>& shapes) {
-	Number::parse(cursor, shapes);
-	Number::parse(cursor, shapes);
+	try {
+		for (int i = 0; i < 2; i++)
+			Number::parse(cursor, shapes);
+	} catch (string& e) {
+		throw string(e + " -> invalid frame declaration");
+	}
 }
 
 const string Color::keyword = "color";
@@ -322,7 +384,7 @@ void Paint::parse(const vector<string>& input) {
 
 	try {
 		if (keyword != Frame::keyword)
-			throw string("error: expected " + Frame::keyword + " keyword");
+			throw string("expected " + Frame::keyword + " keyword, got " + keyword);
 
 		vector<string> colors;
 		vector<string> shapes;
@@ -357,10 +419,10 @@ void Paint::parse(const vector<string>& input) {
 				cout << "Number of fills: " << fillCount << endl;
 				break;
 			} else {
-				throw "error: invalid keyword " + keyword;
+				throw string("invalid keyword " + keyword);
 			}
 		}
 	} catch (string& e) {
-		throw string(cursor.at() + ' ' + e + '\n' + cursor.graphic());
+		throw string(cursor.at() + " error: " + e + '\n' + cursor.graphic());
 	}
 }
