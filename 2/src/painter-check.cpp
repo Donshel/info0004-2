@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
 	file.open(filename);
 
 	if (!file.is_open()) {
-		cerr << "painter-check: error:" << " " + filename + ":" << "No such file or directory" << endl;
+		cerr << "painter-check: error: " + filename + ": No such file or directory" << endl;
 		exit(1);
 	}
 
@@ -29,8 +29,8 @@ int main(int argc, char* argv[]) {
 	try {
 		Paint::parse(input);
 	} catch (string& e) {
-		cerr << filename + e;
-		return 1;
+		cerr << filename + ':' + e << endl;
+		exit(1);
 	}
 
 	return 0;

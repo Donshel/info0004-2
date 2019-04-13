@@ -10,10 +10,15 @@ Cursor::Cursor (const vector<string>& new_input) {
 	L = input.size();
 	c = 0;
 	C = input[l].length();
+	w = 0;
 }
 
 string Cursor::at() {
-	return ":" + to_string(l + 1) + ":" + to_string(c + 1);
+	return to_string(l + 1) + ":" + to_string(c + 1 - w) + ":";
+}
+
+string Cursor::graphic() {
+	return '\t' + input[l] + '\n' + '\t' + string(c - w, ' ') + '^';
 }
 
 char Cursor::nextChar() {
@@ -21,6 +26,8 @@ char Cursor::nextChar() {
 	while (b < C && isspace(input[l][b]))
 		b++;
 
+	w = 0;
+	
 	if (b == C) {
 		if (this->last())
 			return ' ';
@@ -57,6 +64,8 @@ string Cursor::nextWord() {
 				break;
 			c++;
 		}
+
+	w = c - b;
 
 	return input[l].substr(b, c - b);
 }
@@ -347,6 +356,6 @@ void Paint::parse(const vector<string>& input) {
 			}
 		}
 	} catch (string& e) {
-		throw string(cursor.at() + " " + e);
+		throw string(cursor.at() + ' ' + e + '\n' + cursor.graphic());
 	}
 }

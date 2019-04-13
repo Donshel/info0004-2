@@ -10,11 +10,12 @@ class Cursor {
 	public:
 		Cursor (const vector<string>& new_input);
 		string at();
+		string graphic();
 		char nextChar();
 		string nextWord();
 	private:
 		vector<string> input;
-		unsigned int l, L, c, C;
+		unsigned int l, L, c, C, w;
 		bool last();
 		void backspace();
 };
