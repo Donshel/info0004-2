@@ -1,58 +1,7 @@
 #ifndef PAINTER
 #define PAINTER
 
-#include <string>
-#include <vector>
-
-using namespace std;
-
-class Cursor {
-	public:
-		/**
-		 * Class constructor.
-		 *
-		 * @param new_input the input to read
-		 */
-		Cursor (const vector<string>& new_input);
-
-		/**
-		 * @return the current position formatted as LINE:COL:
-		 */
-		string at();
-
-		/**
-		 * @return the current position graphically
-		 */
-		string graphic();
-
-		/**
-		 * Move the cursor to the start of the next token.
-		 *
-		 * @return the first character of the next token
-		 */
-		char nextChar();
-
-		/**
-		 * Move the cursor to the end of the next token.
-		 *
-		 * @return the next token
-		 */
-		string nextWord();
-
-	private:
-		vector<string> input;
-		unsigned int l, L, c, C, w;
-
-		/**
-		 * @return true if the cursor is within the last line, false otherwise
-		 */
-		bool last();
-
-		/**
-		 * Move the cursor to the start of the next line.
-		 */
-		void backspace();
-};
+#include "cursor.hpp"
 
 class Name {
 	public:
@@ -61,24 +10,24 @@ class Name {
 		 *
 		 * @throw an error string if the token(s) is(are)n't a valid name or is already used
 		 */
-		static void parse(Cursor& cursor, vector<string>& names);
+		static void parse(Cursor& cursor, std::vector<std::string>& names);
 
 		/**
 		 * @throw an error string if the token(s) is(are)n't a valid name
 		 */
-		static void valid(const string& name);
+		static void valid(const std::string& name);
 
 		/**
 		 * @throw an error string if the token(s) is(are)n't a valid name or is unknown
 		 */
-		static void exist(const string& name, const vector<string>& names);
+		static void exist(const std::string& name, const std::vector<std::string>& names);
 
 		/**
 		 * Parse as an existing name the next token(s) given by cursor.
 		 *
 		 * @throw an error string if the token(s) is(are)n't a valid name or is unknown
 		 */
-		static void parseExist(Cursor& cursor, const vector<string>& names);
+		static void parseExist(Cursor& cursor, const std::vector<std::string>& names);
 };
 
 class Number {
@@ -88,13 +37,13 @@ class Number {
 		 *
 		 * @throw an error string if the token(s) is(are)n't a valid number
 		 */
-		static void parse(Cursor& cursor, const vector<string>& shapes);
+		static void parse(Cursor& cursor, const std::vector<std::string>& shapes);
 
 	private:
 		/**
-		 * @throw an error string if the string has non-digit characters
+		 * @throw an error string if the std::string has non-digit characters
 		 */
-		static void valid(const string& number);
+		static void valid(const std::string& number);
 };
 
 class Point {
@@ -104,100 +53,100 @@ class Point {
 		 *
 		 * @throw an error string if the token(s) is(are)n't a valid point
 		 */
-		static void parse(Cursor& cursor, const vector<string>& shapes);
+		static void parse(Cursor& cursor, const std::vector<std::string>& shapes);
 };
 
 class Color {
 	public:
-		static const string keyword;
+		static const std::string keyword;
 
 		/**
 		 * Parse as a color declaration the next token(s) given by cursor.
 		 *
 		 * @throw an error string if the token(s) is(are)n't a valid color declaration
 		 */
-		static void keyParse(Cursor& cursor, vector<string>& colors, const vector<string>& shapes);
+		static void keyParse(Cursor& cursor, std::vector<std::string>& colors, const std::vector<std::string>& shapes);
 
 		/**
 		 * Parse as a color the next token(s) given by cursor.
 		 *
 		 * @throw an error string if the token(s) is(are)n't a valid color
 		 */
-		static void parse(Cursor& cursor, const vector<string>& colors, const vector<string>& shapes);
+		static void parse(Cursor& cursor, const std::vector<std::string>& colors, const std::vector<std::string>& shapes);
 };
 
 class Fill {
 	public:
-		static const string keyword;
+		static const std::string keyword;
 
 		/**
 		 * Parse as a fill declaration the next token(s) given by cursor.
 		 *
 		 * @throw an error string if the token(s) is(are)n't a valid fill declaration
 		 */
-		static void keyParse(Cursor& cursor, const vector<string>& colors, const vector<string>& shapes);
+		static void keyParse(Cursor& cursor, const std::vector<std::string>& colors, const std::vector<std::string>& shapes);
 };
 
 class Shape {};
 
 class Circle : public Shape {
 	public:
-		static const string keyword;
+		static const std::string keyword;
 
 		/**
 		 * Parse as a circle declaration the next token(s) given by cursor.
 		 *
 		 * @throw an error string if the token(s) is(are)n't a valid circle declaration
 		 */
-		static void keyParse(Cursor& cursor, vector<string>& shapes);
+		static void keyParse(Cursor& cursor, std::vector<std::string>& shapes);
 };
 
 class Rectangle : public Shape {
 	public:
-		static const string keyword;
-		static void keyParse(Cursor& cursor, vector<string>& shapes);
+		static const std::string keyword;
+		static void keyParse(Cursor& cursor, std::vector<std::string>& shapes);
 };
 
 class Triangle : public Shape {
 	public:
-		static const string keyword;
-		static void keyParse(Cursor& cursor, vector<string>& shapes);
+		static const std::string keyword;
+		static void keyParse(Cursor& cursor, std::vector<std::string>& shapes);
 };
 
 class Shift : public Shape {
 	public:
-		static const string keyword;
-		static void keyParse(Cursor& cursor, vector<string>& shapes);
+		static const std::string keyword;
+		static void keyParse(Cursor& cursor, std::vector<std::string>& shapes);
 };
 
 class Rotation : public Shape {
 	public:
-		static const string keyword;
-		static void keyParse(Cursor& cursor, vector<string>& shapes);
+		static const std::string keyword;
+		static void keyParse(Cursor& cursor, std::vector<std::string>& shapes);
 };
 
 class Union : public Shape {
 	public:
-		static const string keyword;
-		static void keyParse(Cursor& cursor, vector<string>& shapes);
+		static const std::string keyword;
+		static void keyParse(Cursor& cursor, std::vector<std::string>& shapes);
 };
 
 class Difference : public Shape {
 	public:
-		static const string keyword;
-		static void keyParse(Cursor& cursor, vector<string>& shapes);
+		static const std::string keyword;
+		static void keyParse(Cursor& cursor, std::vector<std::string>& shapes);
 };
 
 class Frame {
 	public:
-		static const string keyword;
+		static const std::string keyword;
 
 		/**
 		 * Parse as a frame declaration the next token(s) given by cursor.
 		 *
 		 * @throw an error string if the token(s) is(are)n't a valid frame declaration
 		 */
-		static void keyParse(Cursor& cursor, const vector<string>& shapes);
+		static void keyParse(Cursor& cursor, const std::vector<std::string>& shapes);
 };
 
 class Paint {
@@ -208,7 +157,7 @@ class Paint {
 		 *
 		 * @throw an error string at the first grammar mistake
 		 */
-		static void parse(const vector<string>& input);
+		static void parse(const std::vector<std::string>& input);
 };
 
 #endif
