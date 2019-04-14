@@ -43,45 +43,37 @@ void Name::parseExist(Cursor& cursor, const vector<string>& names) {
 void Number::parse(Cursor& cursor, const vector<string>& shapes) {
 	char op = cursor.nextChar();
 
-	if (isalpha(op)) {
-		string word = cursor.nextWord();
-
-		size_t pos1 = word.find('.');
-
-		if (pos1 == string::npos)
-			throw string("expected number, got " + word);
-
-		size_t pos2 = word.find('.', pos1 + 1);
-
-		if (pos2 == string::npos)
-			throw string("expected number, got point " + word);
-
+	if (op == '(' || op == '{' || isalpha(op)) {
+		string word = "", proj;
+		
 		try {
-			Name::exist(word.substr(0, pos1), shapes);
-			Name::valid(word.substr(pos1 + 1, pos2 - pos1 - 1));
+			if (op == '(' || op == '{') {
+				Point::parse(cursor, shapes);
 
-			string p = word.substr(pos2 + 1);
+				word = cursor.nextWord();
 
-			if (p != "x" && p != "y")
-				throw string("expected x or y, got " + p);
+				if (word[0] != '.')
+					throw string("expected .x or .y, got " + word);
+
+				proj = word.substr(1);
+			} else {
+				word = cursor.nextWord();
+
+				size_t pos = word.find_last_of('.');
+
+				if (pos == string::npos)
+					throw string("expected point coordinate, got " + word);
+
+				Point::valid(word.substr(0, pos), shapes);
+
+				proj = word.substr(pos + 1);
+			}
+
+			if (proj != "x" && proj != "y")
+				throw string("expected x or y, got " + proj);
+
 		} catch (string& e) {
 			throw string(e + " -> invalid number " + word);
-		}
-	} else if (op == '(' || op == '{') {
-		try {
-			Point::parse(cursor, shapes);
-
-			char op = cursor.nextChar();
-
-			if (op != '.')
-				throw string("expected .x or .y");
-
-			string p = cursor.nextWord().substr(1);
-
-			if (p != "x" && p != "y")
-				throw string("expected x or y, got " + p);
-		} catch (string& e) {
-			throw string(e + " -> invalid number");
 		}
 	} else {
 		string word = cursor.nextWord();
@@ -151,17 +143,21 @@ void Point::parse(Cursor& cursor, const vector<string>& shapes) {
 				throw string("expected operator (+, -, * or /), got " + op);
 			}
 		} else {
-			size_t pos = word.find('.');
-
-			if (pos == string::npos)
-				throw string("expected point, got" + word);
-
-			Name::exist(word.substr(0, pos), shapes);
-			Name::valid(word.substr(pos + 1));
+			Point::valid(word, shapes);
 		}
 	} catch (string& e) {
 		throw string(e + " -> invalid point");
 	}
+}
+
+void Point::valid(const string& point, const vector<string>& shapes) {
+	size_t pos = point.find('.');
+
+	if (pos == string::npos)
+		throw string("expected point, got" + point);
+
+	Name::exist(point.substr(0, pos), shapes);
+	Name::valid(point.substr(pos + 1));
 }
 
 void Color::keyParse(Cursor& cursor, vector<string>& colors, const vector<string>& shapes) {

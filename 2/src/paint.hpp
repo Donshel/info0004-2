@@ -54,6 +54,13 @@ class Point {
 		 * @throw an error string if the token(s) is(are)n't a valid point
 		 */
 		static void parse(Cursor& cursor, const std::vector<std::string>& shapes);
+
+		/**
+		 * Parse as a named point the given string.
+		 *
+		 * @throw an error string if the string isn't a valid named point
+		 */
+		static void valid(const std::string& point, const std::vector<std::string>& shapes);
 };
 
 class Color {
