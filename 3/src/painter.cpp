@@ -1,0 +1,43 @@
+#include <iostream>
+#include <fstream>
+
+#include "paint.hpp"
+
+using namespace std;
+
+int main(int argc, char* argv[]) {
+	if (argc < 2) {
+		cerr << "painter-check: fatal-error: no input file" << endl;
+		exit(1);
+	}
+
+	string filename = argv[1];
+	string line;
+	ifstream file;
+
+	file.open(filename);
+
+	if (!file.is_open()) {
+		cerr << "painter-check: error: " + filename + ": No such file or directory" << endl;
+		exit(1);
+	}
+
+	vector<string> input;
+	while (getline(file, line))
+		input.push_back(line);
+
+	file.close();
+
+	Paint paint;
+
+	try {
+		paint = Paint(input);
+	} catch (ParseException& e) {
+		cerr << filename + ':' + string(e.what()) << endl;
+		exit(1);
+	}
+
+	paint.report();
+
+	return 0;
+}
