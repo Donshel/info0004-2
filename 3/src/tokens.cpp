@@ -44,7 +44,7 @@ void Name::valid(const string& name) {
 			throw ParseException("invalid character " + string(1, *it));
 }
 
-double Number::parse(Cursor& cursor, const map<string, unique_ptr<Shape>>& shapes) {
+double Number::parse(Cursor& cursor, const map<string, unique_ptr<const Shape>>& shapes) {
 	char op = cursor.nextChar();
 	double n;
 
@@ -146,11 +146,11 @@ Point::Point(double x, double y) {
 	this->y = y;
 }
 
-double Point::_x() {
+inline double Point::_x() const {
 	return x;
 }
 
-double Point::_y() {
+inline double Point::_y() const {
 	return y;
 }
 
@@ -165,19 +165,19 @@ Point Point::rotation(double theta, const Point& P) const {
 	return (*this - P).rotation(theta) + P;
 }
 
-Point Point::operator +(const Point& P) const {
+inline Point Point::operator +(const Point& P) const {
 	return Point(this->x + P.x, this->y + P.y);
 }
 
-Point Point::operator -(const Point& P) const {
+inline Point Point::operator -(const Point& P) const {
 	return Point(this->x - P.x, this->y - P.y);
 }
 
-Point Point::operator *(double n) const {
+inline Point Point::operator *(double n) const {
 	return Point(this->x * n, this->y * n);
 }
 
-Point Point::operator /(double n) const {
+inline Point Point::operator /(double n) const {
 	return Point(this->x / n, this->y / n);
 }
 
@@ -205,7 +205,7 @@ Point& Point::operator /=(double n) {
 	return *this;
 }
 
-Point Point::parse(Cursor& cursor, const map<string, unique_ptr<Shape>>& shapes) {
+Point Point::parse(Cursor& cursor, const map<string, unique_ptr<const Shape>>& shapes) {
 	string word = cursor.nextWord();
 	Point point(0, 0);
 
@@ -255,7 +255,7 @@ Point Point::parse(Cursor& cursor, const map<string, unique_ptr<Shape>>& shapes)
 	return point;
 }
 
-Point Point::named(const string& word, const map<string, unique_ptr<Shape>>& shapes) {
+Point Point::named(const string& word, const map<string, unique_ptr<const Shape>>& shapes) {
 	size_t pos = word.find('.');
 
 	if (pos == string::npos)
@@ -268,7 +268,7 @@ Point Point::named(const string& word, const map<string, unique_ptr<Shape>>& sha
 	if (it == shapes.end())
 		throw ParseException("unknown shape " + name);
 
-	Shape* shape = (*it).second.get();
+	const Shape* shape = (*it).second.get();
 
 	string point = word.substr(pos + 1);
 	Name::valid(point);
@@ -286,7 +286,7 @@ Color::Color(double* RGB) {
 		this->RGB[i] = (char) RGB[i] * 255;
 }
 
-void Color::keyParse(Cursor& cursor, map<string, unique_ptr<Color>>& colors, const map<string, unique_ptr<Shape>>& shapes) {
+void Color::keyParse(Cursor& cursor, map<string, unique_ptr<const Color>>& colors, const map<string, unique_ptr<const Shape>>& shapes) {
 	string name;
 	Color* color = new Color();
 
@@ -304,10 +304,10 @@ void Color::keyParse(Cursor& cursor, map<string, unique_ptr<Color>>& colors, con
 		throw ParseException(string(e.what()) + " -> invalid color declaration");
 	}
 
-	colors[name] = unique_ptr<Color>(color);
+	colors[name] = unique_ptr<const Color>(color);
 }
 
-Color Color::parse(Cursor& cursor, const map<string, unique_ptr<Color>>& colors, const map<string, unique_ptr<Shape>>& shapes) {
+Color Color::parse(Cursor& cursor, const map<string, unique_ptr<const Color>>& colors, const map<string, unique_ptr<const Shape>>& shapes) {
 	string word = cursor.nextWord();
 	Color color;
 
@@ -339,11 +339,11 @@ Color Color::parse(Cursor& cursor, const map<string, unique_ptr<Color>>& colors,
 	return color;
 }
 
-Point Shape::_center() {
+inline Point Shape::_center() const {
 	return center;
 }
 
-double Shape::_phi() {
+inline double Shape::_phi() const {
 	return phi;
 }
 
@@ -366,18 +366,18 @@ Shape& Shape::rotation(double theta, const Point& P) {
 	return *this;
 }
 
-Point Shape::absolute(const Point& P) {
+Point Shape::absolute(const Point& P) const {
 	return center + P.rotation(phi);
 }
 
-Point Shape::point(const string& name) { // fake definition : Shape::point is never called
+Point Shape::point(const string& name) const { // fake definition : Shape::point is never called
 	if (name == "c")
 		return center;
 	else
-		return Point(0, 0);
+		return Point();
 }
 
-Shape Shape::parse(Cursor& cursor, const map<string, unique_ptr<Shape>>& shapes) {
+Shape Shape::parse(Cursor& cursor, const map<string, unique_ptr<const Shape>>& shapes) {
 	string name = cursor.nextWord();
 	Name::valid(name);
 
@@ -389,7 +389,7 @@ Shape Shape::parse(Cursor& cursor, const map<string, unique_ptr<Shape>>& shapes)
 	return *(*it).second;
 }
 
-string Shape::name(Cursor& cursor, const map<string, unique_ptr<Shape>>& shapes) {
+string Shape::name(Cursor& cursor, const map<string, unique_ptr<const Shape>>& shapes) {
 	string name = cursor.nextWord();
 	Name::valid(name);
 
@@ -407,7 +407,7 @@ Ellipse::Ellipse(Point center, double a, double b) {
 	this->b = b;
 }
 
-Point Ellipse::point(const string& name) {
+Point Ellipse::point(const string& name) const {
 	double c = sqrt(pow(a, 2) - pow(b, 2));
 	double theta;
 
@@ -439,11 +439,11 @@ Point Ellipse::point(const string& name) {
 	return this->absolute(this->border(theta));
 }
 
-Point Ellipse::border(double theta) {
+inline Point Ellipse::border(double theta) const {
 	return center + Point(a * cos(theta), b * sin(theta));
 }
 
-void Ellipse::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
+void Ellipse::keyParse(Cursor& cursor, map<string, unique_ptr<const Shape>>& shapes) {
 	string name;
 	Point center;
 	double a, b;
@@ -466,12 +466,12 @@ void Ellipse::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid ellipse declaration");
 	}
 
-	shapes[name] = unique_ptr<Shape>(new Ellipse(center, a, b));
+	shapes[name] = unique_ptr<const Shape>(new Ellipse(center, a, b));
 }
 
 Circle::Circle(Point center, double radius) : Ellipse(center, radius, radius) {}
 
-Point Circle::point(const string& name) {
+Point Circle::point(const string& name) const {
 	Point P;
 
 	try {
@@ -486,7 +486,7 @@ Point Circle::point(const string& name) {
 	return P;
 }
 
-void Circle::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
+void Circle::keyParse(Cursor& cursor, map<string, unique_ptr<const Shape>>& shapes) {
 	string name;
 	Point center;
 	double radius;
@@ -502,7 +502,7 @@ void Circle::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid circle declaration");
 	}
 
-	shapes[name] = unique_ptr<Shape>(new Circle(center, radius));
+	shapes[name] = unique_ptr<const Shape>(new Circle(center, radius));
 }
 
 Polygon::Polygon() {}
@@ -519,7 +519,7 @@ Polygon::Polygon(const vector<Point>& vertices) {
 		this->vertices.push_back(*it - center);
 }
 
-Point Polygon::midpoint(unsigned int n) {
+Point Polygon::midpoint(size_t n) const {
 	int l = vertices.size();
 	return (vertices[n % l] + vertices[(n + 1) % l]) / 2;
 }
@@ -533,7 +533,7 @@ Rectangle::Rectangle(Point center, double width, double height) {
 	vertices.push_back(Point(-width / 2, height / 2));
 }
 
-Point Rectangle::point(const string& name) {
+Point Rectangle::point(const string& name) const {
 	Point P;
 
 	if (name == "c")
@@ -560,7 +560,7 @@ Point Rectangle::point(const string& name) {
 	return this->absolute(P);
 }
 
-void Rectangle::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
+void Rectangle::keyParse(Cursor& cursor, map<string, unique_ptr<const Shape>>& shapes) {
 	string name;
 	Point center;
 	double width, height;
@@ -580,12 +580,12 @@ void Rectangle::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes)
 		throw ParseException(string(e.what()) + " -> invalid rectangle declaration");
 	}
 
-	shapes[name] = unique_ptr<Shape>(new Rectangle(center, width, height));
+	shapes[name] = unique_ptr<const Shape>(new Rectangle(center, width, height));
 }
 
 Triangle::Triangle(const vector<Point>& vertices) : Polygon(vertices) {}
 
-Point Triangle::point(const string& name) {
+Point Triangle::point(const string& name) const {
 	Point P;
 
 	if (name == "c")
@@ -608,7 +608,7 @@ Point Triangle::point(const string& name) {
 	return this->absolute(P);
 }
 
-void Triangle::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
+void Triangle::keyParse(Cursor& cursor, map<string, unique_ptr<const Shape>>& shapes) {
 	string name;
 	vector<Point> vertices;
 
@@ -621,10 +621,10 @@ void Triangle::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) 
 		throw ParseException(string(e.what()) + " -> invalid triangle declaration");
 	}
 
-	shapes[name] = unique_ptr<Shape>(new Triangle(vertices));
+	shapes[name] = unique_ptr<const Shape>(new Triangle(vertices));
 }
 
-void Shift::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
+void Shift::keyParse(Cursor& cursor, map<string, unique_ptr<const Shape>>& shapes) {
 	string name;
 	Point P;
 	Shape* shape = new Shape();
@@ -638,10 +638,10 @@ void Shift::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
 	}
 
 	(*shape).shift(P);
-	shapes[name] = unique_ptr<Shape>(shape);
+	shapes[name] = unique_ptr<const Shape>(shape);
 }
 
-void Rotation::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
+void Rotation::keyParse(Cursor& cursor, map<string, unique_ptr<const Shape>>& shapes) {
 	string name;
 	double theta;
 	Point P;
@@ -657,7 +657,7 @@ void Rotation::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) 
 	}
 
 	(*shape).rotation(theta, P);
-	shapes[name] = unique_ptr<Shape>(shape);
+	shapes[name] = unique_ptr<const Shape>(shape);
 }
 
 Union::Union(vector<Shape>& set) {
@@ -672,7 +672,7 @@ Union::Union(vector<Shape>& set) {
 	this->set = set;
 }
 
-Point Union::point(const string& name) {
+Point Union::point(const string& name) const {
 	Point P;
 
 	try {
@@ -684,7 +684,7 @@ Point Union::point(const string& name) {
 	return P;
 }
 
-void Union::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
+void Union::keyParse(Cursor& cursor, map<string, unique_ptr<const Shape>>& shapes) {
 	string name;
 	vector<Shape> set;
 
@@ -704,7 +704,7 @@ void Union::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid union declaration");
 	}
 
-	shapes[name] = unique_ptr<Shape>(new Union(set));
+	shapes[name] = unique_ptr<const Shape>(new Union(set));
 }
 
 Difference::Difference(Shape& in, Shape& out) {
@@ -721,7 +721,7 @@ Difference::Difference(Shape& in, Shape& out) {
 	this->out = out;
 }
 
-Point Difference::point(const string& name) {
+Point Difference::point(const string& name) const {
 	Point P;
 
 	try {
@@ -733,7 +733,7 @@ Point Difference::point(const string& name) {
 	return P;
 }
 
-void Difference::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes) {
+void Difference::keyParse(Cursor& cursor, map<string, unique_ptr<const Shape>>& shapes) {
 	string name;
 	Shape in, out;
 
@@ -745,7 +745,7 @@ void Difference::keyParse(Cursor& cursor, map<string, unique_ptr<Shape>>& shapes
 		throw ParseException(string(e.what()) + " -> invalid difference declaration");
 	}
 
-	shapes[name] = unique_ptr<Shape>(new Difference(in, out));
+	shapes[name] = unique_ptr<const Shape>(new Difference(in, out));
 }
 
 Fill::Fill(const Shape& shape, const Color& color) {

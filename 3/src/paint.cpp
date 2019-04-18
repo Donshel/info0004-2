@@ -11,7 +11,7 @@ Paint::Paint(const vector<string>& input) {
 	this->parse();
 }
 
-void Paint::report() {
+void Paint::report() const {
 	cout << "Number of shapes: " << shapes.size() << endl;
 	cout << "Number of colors: " << colors.size() << endl;
 	cout << "Number of fills: " << fills.size() << endl;

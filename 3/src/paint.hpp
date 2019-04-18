@@ -11,7 +11,7 @@ class Paint {
 		/**
 		 * Print a small report of the paint.
 		 */
-		void report();
+		void report() const;
 
 	private:
 		static const std::string keyword;
@@ -25,8 +25,8 @@ class Paint {
 		 * fills us the vector of fills
 		 */
 		Cursor cursor;
-		std::map<std::string, std::unique_ptr<Color>> colors;
-		std::map<std::string, std::unique_ptr<Shape>> shapes;
+		std::map<std::string, std::unique_ptr<const Color>> colors;
+		std::map<std::string, std::unique_ptr<const Shape>> shapes;
 		std::vector<Fill> fills;
 
 		/**
