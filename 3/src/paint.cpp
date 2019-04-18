@@ -4,11 +4,17 @@
 
 using namespace std;
 
-Paint::Paint() {};
-
 Paint::Paint(const vector<string>& input) {
 	cursor = Cursor(input);
 	this->parse();
+}
+
+unsigned long Paint::_width() const {
+	return width;
+}
+
+unsigned long Paint::_height() const {
+	return height;
 }
 
 void Paint::report() const {
@@ -52,7 +58,7 @@ void Paint::parse() {
 			else if (word.empty())
 				break;
 			else
-				throw ParseException("invalid keyword " + keyword);
+				throw ParseException("invalid keyword " + word);
 		}
 	} catch (ParseException& e) {
 		throw ParseException(cursor.at() + " error: " + string(e.what()) + '\n' + cursor.graphic());
@@ -78,4 +84,14 @@ void Paint::keyParse() {
 
 	this->width = width;
 	this->height = height;
+}
+
+Color Paint::pixel(double x, double y) const {
+	Point P = Point(x, y);
+
+	for (auto it = this->fills.rbegin(); it != this->fills.rend(); it++)
+		if ((*(*it).shape).has(P))
+			return *(*it).color;
+
+	return Color();
 }

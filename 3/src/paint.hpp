@@ -5,13 +5,26 @@
 
 class Paint {
 	public:
-		Paint();
+		Paint() {}
 		Paint(const std::vector<std::string>& input);
+
+		/**
+		 * @return width, respectively height, of the paint
+		 */
+		unsigned long _width() const;
+		unsigned long _height() const;
 
 		/**
 		 * Print a small report of the paint.
 		 */
 		void report() const;
+
+		/**
+		 * Search the color of the last fill which shape contains the point (x, y).
+		 *
+		 * @return the color of a Point in the paint
+		 */
+		Color pixel(double x, double y) const;
 
 	private:
 		static const std::string keyword;
@@ -25,8 +38,8 @@ class Paint {
 		 * fills us the vector of fills
 		 */
 		Cursor cursor;
-		std::map<std::string, std::unique_ptr<const Color>> colors;
-		std::map<std::string, std::unique_ptr<const Shape>> shapes;
+		std::map<std::string, color_ptr> colors;
+		std::map<std::string, shape_ptr> shapes;
 		std::vector<Fill> fills;
 
 		/**

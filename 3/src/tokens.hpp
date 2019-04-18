@@ -19,6 +19,9 @@ class ParseException: public std::exception {
 class Color;
 class Shape;
 
+typedef std::shared_ptr<const Shape> shape_ptr;
+typedef std::shared_ptr<const Color> color_ptr;
+
 class Name {
 	public:
 		/**
@@ -43,7 +46,7 @@ class Number {
 		 * @throw a ParseException if the token(s) is(are)n't a valid number
 		 * @return the token(s) as a number
 		 */
-		static double parse(Cursor& cursor, const std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static double parse(Cursor& cursor, const std::map<std::string, shape_ptr>& shapes);
 
 		/**
 		 * Parse as an integer the given string.
@@ -56,14 +59,24 @@ class Number {
 
 class Point {
 	public:
-		Point();
-		Point(double x, double y);
+		Point() : x(0), y(0) {}
+		Point(double x, double y) : x(x), y(y) {}
 
 		/**
 		 * @return x, respectively y, coordinate of the point
 		 */
 		double _x() const;
 		double _y() const;
+
+		/**
+		 * @return the norm of a vector
+		 */
+		double norm() const;
+
+		/**
+		 * @return the angle of a vector
+		 */
+		double angle() const;
 
 		/**
 		 * Rotation of a point around origin.
@@ -78,6 +91,13 @@ class Point {
 		 * @return the rotated point
 		 */
 		Point rotation(double theta, const Point& P) const;
+
+		/**
+		 * @return the cross product between two vectors
+		 */
+		static double cross(const Point& v1, const Point& v2);
+
+		bool operator ==(const Point& P) const;
 
 		Point operator +(const Point& P) const;
 		Point operator -(const Point& P) const;
@@ -95,7 +115,7 @@ class Point {
 		 * @throw a ParseException if the token(s) is(are)n't a valid point
 		 * @return the token(s) as a point
 		 */
-		static Point parse(Cursor& cursor, const std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static Point parse(Cursor& cursor, const std::map<std::string, shape_ptr>& shapes);
 
 		/**
 		 * Parse as a named point the given string.
@@ -103,7 +123,7 @@ class Point {
 		 * @throw a ParseException if the string isn't a valid named point
 		 * @return the string as a point
 		 */
-		static Point named(const std::string& point, const std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static Point named(const std::string& point, const std::map<std::string, shape_ptr>& shapes);
 
 	private:
 		double x, y;
@@ -111,7 +131,9 @@ class Point {
 
 class Color {
 	public:
-		Color();
+		uint8_t r, g, b;
+
+		Color() : r(0), g(0), b(0) {}
 
 		static const std::string keyword;
 
@@ -120,7 +142,7 @@ class Color {
 		 *
 		 * @throw a ParseException if the token(s) is(are)n't a valid color declaration
 		 */
-		static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Color>>& colors, const std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static void keyParse(Cursor& cursor, std::map<std::string, color_ptr>& colors, const std::map<std::string, shape_ptr>& shapes);
 
 		/**
 		 * Parse as a color the next token(s) given by cursor.
@@ -128,22 +150,22 @@ class Color {
 		 * @throw a ParseException if the token(s) is(are)n't a valid color
 		 * @return the token(s) as a color
 		 */
-		static Color parse(Cursor& cursor, const std::map<std::string, std::unique_ptr<const Color>>& colors, const std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static color_ptr parse(Cursor& cursor, const std::map<std::string, color_ptr>& colors, const std::map<std::string, shape_ptr>& shapes);
 
 	private:
-		uint8_t RGB[3];
-
-		Color(double* RGB);
+		Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
 };
 
 class Shape {
 	public:
+		virtual Shape* clone() const;
+
 		Point _center() const;
 		double _phi() const;
 
-		Shape& shift(const Point& P);
-		Shape& rotation(double theta);
-		Shape& rotation(double theta, const Point& P);
+		void shift(const Point& P);
+		void rotation(double theta);
+		void rotation(double theta, const Point& P);
 
 		/**
 		 * Search a named point in the shape.
@@ -154,19 +176,24 @@ class Shape {
 		virtual Point point(const std::string& name) const;
 
 		/**
+		 * @return true if P is within the shape
+		 */
+		virtual bool has(const Point& P) const;
+
+		/**
 		 * Parse as a shape name the next token given by cursor.
 		 *
 		 * @throw a ParseException if the token is an unknown shape name
-		 * @return a reference to the shape which name is the token
+		 * @return a cpy of the shape which name is the token
 		 */
-		static Shape parse(Cursor& cursor, const std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static shape_ptr parse(Cursor& cursor, const std::map<std::string, shape_ptr>& shapes);
 
 		/**
 		 * Parse as a shape declaration the next token(s) given by cursor.
 		 *
 		 * @throw a ParseException if the token(s) is(are)n't a valid shape declaration
 		 */
-		// static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		// static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 	protected:
 		Point center;
@@ -178,44 +205,56 @@ class Shape {
 		Point absolute(const Point& P) const;
 
 		/**
+		 * Tranform an absolute point into a point relative to the shape.
+		 */
+		Point relative(const Point& P) const;
+
+		/**
 		 * Parse as a shape name the next token given by cursor.
 		 *
 		 * @throw a ParseException if the token is an already used shape name
 		 */
-		static std::string name(Cursor& cursor, const std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static std::string name(Cursor& cursor, const std::map<std::string, shape_ptr>& shapes);
 };
 
 class Ellipse : public Shape {
 	public:
 		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		virtual Point point(const std::string& name) const;
+		virtual bool has(const Point& P) const;
 
 	protected:
 		double a, b;
 
-		Ellipse(Point center, double a, double b);
+		Ellipse() {}
+		Ellipse(Point center, double a, double b) : a(a), b(b) { this->center = center; }
 
 		Point border(double theta) const;
+
+		virtual Shape* clone() const;
 };
 
 class Circle : public Ellipse {
 	public:
 		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
 
 	protected:
-		Circle(Point center, double radius);
+		Circle() {}
+		Circle(Point center, double radius) : Ellipse(center, radius, radius) {}
+
+		virtual Shape* clone() const;
 };
 
 class Polygon : public Shape {
 	protected:
 		std::vector<Point> vertices;
 
-		Polygon();
+		Polygon() {}
 		Polygon(const std::vector<Point>& vertices);
 
 		/**
@@ -227,65 +266,86 @@ class Polygon : public Shape {
 class Rectangle : public Polygon {
 	public:
 		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
+		bool has(const Point& P) const;
 
 	protected:
+		double width, height;
+
+		Rectangle() {}
 		Rectangle(Point center, double width, double height);
+
+		virtual Shape* clone() const;
 };
 
 class Triangle : public Polygon {
 	public:
 		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
+		bool has(const Point& P) const;
 		
 	protected:
-		Triangle(const std::vector<Point>& vertices);
+		Triangle() {}
+		Triangle(const std::vector<Point>& vertices) : Polygon(vertices) {}
+
+		virtual Shape* clone() const;
 };
 
 class Shift : public Shape {
 	public:
 		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 };
 
 class Rotation : public Shape {
 	public:
 		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 };
 
 class Union : public Shape {
 	public:
 		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
+		bool has(const Point& P) const;
 
 	protected:
-		std::vector<Shape> set;
+		std::vector<shape_ptr> set;
 
-		Union(std::vector<Shape>& set);
+		Union() {}
+		Union(std::vector<shape_ptr>& set) : set(set) {}
+
+		virtual Shape* clone() const;
 };
 
 class Difference : public Shape {
 	public:
 		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, std::unique_ptr<const Shape>>& shapes);
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
+		bool has(const Point& P) const;
 
 	protected:
-		Shape in, out;
+		shape_ptr in, out;
 
-		Difference(Shape& in, Shape& out);
+		Difference() {}
+		Difference(shape_ptr& in, shape_ptr& out) : in(in), out(out) {}
+
+		virtual Shape* clone() const;
 };
 
 class Fill {
 	public:
+		shape_ptr shape;
+		color_ptr color;
+		
 		static const std::string keyword;
 
 		/**
@@ -293,13 +353,10 @@ class Fill {
 		 *
 		 * @throw a ParseException if the token(s) is(are)n't a valid fill declaration
 		 */
-		static void keyParse(Cursor& cursor, const std::map<std::string, std::unique_ptr<Color>>& colors, const std::map<std::string, std::unique_ptr<Shape>>& shapes, std::vector<Fill>& fills);
+		static void keyParse(Cursor& cursor, const std::map<std::string, color_ptr>& colors, const std::map<std::string, shape_ptr>& shapes, std::vector<Fill>& fills);
 
 	private:
-		Shape shape;
-		Color color;
-
-		Fill(const Shape& shape, const Color& color);
+		Fill(shape_ptr& shape, color_ptr& color) : shape(shape), color(color) {}
 };
 
 #endif
