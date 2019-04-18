@@ -3,6 +3,14 @@
 
 #include "cursor.hpp"
 
+class ParseException: public std::exception {
+	public:
+		explicit ParseException(const std::string& str);
+		virtual const char* what() const throw();
+	private:
+		std::string message;
+};
+
 class Name {
 	public:
 		/**
@@ -13,12 +21,12 @@ class Name {
 		static void parse(Cursor& cursor, std::vector<std::string>& names);
 
 		/**
-		 * @throw an error string if the token(s) is(are)n't a valid name
+		 * @throw an error string if the given string isn't a valid name
 		 */
 		static void valid(const std::string& name);
 
 		/**
-		 * @throw an error string if the token(s) is(are)n't a valid name or is unknown
+		 * @throw an error string if the given string isn't a valid name or is unknown
 		 */
 		static void exist(const std::string& name, const std::vector<std::string>& names);
 

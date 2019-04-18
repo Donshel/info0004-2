@@ -30,8 +30,8 @@ int main(int argc, char* argv[]) {
 
 	try {
 		Paint::parse(input);
-	} catch (string& e) {
-		cerr << filename + ':' + e << endl;
+	} catch (ParseException& e) {
+		cerr << filename + ':' + string(e.what()) << endl;
 		exit(1);
 	}
 
