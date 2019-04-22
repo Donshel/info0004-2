@@ -141,12 +141,6 @@ class Color {
 
 class Shape {
 	public:
-		virtual Shape* clone() const;
-
-		void shift(const Point& P);
-		void rotation(double theta);
-		void rotation(double theta, const Point& P);
-
 		/**
 		 * Search a named point in the shape.
 		 *
@@ -177,17 +171,16 @@ class Shape {
 
 	protected:
 		Point center;
-		double phi = 0;
 
 		/**
 		 * Tranform a point relative to the shape into an absolute point.
 		 */
-		Point absolute(const Point& P) const;
+		virtual Point absolute(const Point& P) const { return P + center; };
 
 		/**
 		 * Tranform an absolute point into a point relative to the shape.
 		 */
-		Point relative(const Point& P) const;
+		virtual Point relative(const Point& P) const { return P - center; };
 
 		/**
 		 * Parse as a shape name the next token given by cursor.
@@ -208,12 +201,9 @@ class Ellipse : public Shape {
 	protected:
 		double a, b;
 
-		Ellipse() {}
 		Ellipse(Point center, double a, double b) : a(a), b(b) { this->center = center; }
 
 		Point border(double theta) const;
-
-		virtual Shape* clone() const;
 };
 
 class Circle : public Ellipse {
@@ -224,10 +214,7 @@ class Circle : public Ellipse {
 		Point point(const std::string& name) const;
 
 	protected:
-		Circle() {}
 		Circle(Point center, double radius) : Ellipse(center, radius, radius) {}
-
-		virtual Shape* clone() const;
 };
 
 class Polygon : public Shape {
@@ -254,10 +241,7 @@ class Rectangle : public Polygon {
 	protected:
 		double width, height;
 
-		Rectangle() {}
 		Rectangle(Point center, double width, double height);
-
-		virtual Shape* clone() const;
 };
 
 class Triangle : public Polygon {
@@ -269,22 +253,39 @@ class Triangle : public Polygon {
 		bool has(const Point& P) const;
 		
 	protected:
-		Triangle() {}
 		Triangle(const std::vector<Point>& vertices) : Polygon(vertices) {}
-
-		virtual Shape* clone() const;
 };
 
 class Shift : public Shape {
 	public:
 		static const std::string keyword;
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
+
+		Point point(const std::string& name) const { return this->absolute((*shape).point(name)); };
+		bool has(const Point& P) const { return (*shape).has(this->relative(P)); };
+
+	protected:
+		shape_ptr shape;
+
+		Shift(const Point& P, shape_ptr& shape) : shape(shape) { this->center = P; }
 };
 
 class Rotation : public Shape {
 	public:
 		static const std::string keyword;
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
+
+		Point point(const std::string& name) const { return this->absolute((*shape).point(name)); };
+		bool has(const Point& P) const { return (*shape).has(this->relative(P)); };
+
+	protected:
+		double theta;
+		shape_ptr shape;
+
+		Point absolute(const Point& P) const { return P.rotation(theta, center); };
+		Point relative(const Point& P) const { return P.rotation(-theta, center); };
+
+		Rotation(double theta, const Point& P, shape_ptr& shape) : theta(theta), shape(shape) { this->center = P; }
 };
 
 class Union : public Shape {
@@ -298,10 +299,7 @@ class Union : public Shape {
 	protected:
 		std::vector<shape_ptr> set;
 
-		Union() {}
 		Union(std::vector<shape_ptr>& set) : set(set) {}
-
-		virtual Shape* clone() const;
 };
 
 class Difference : public Shape {
@@ -310,15 +308,12 @@ class Difference : public Shape {
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
-		bool has(const Point& P) const;
+		bool has(const Point& P) const { return (*in).has(P) && !(*out).has(P); };
 
 	protected:
 		shape_ptr in, out;
 
-		Difference() {}
 		Difference(shape_ptr& in, shape_ptr& out) : in(in), out(out) {}
-
-		virtual Shape* clone() const;
 };
 
 class Fill {

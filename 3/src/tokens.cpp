@@ -301,34 +301,6 @@ color_ptr Color::parse(Cursor& cursor, const map<string, color_ptr>& colors, con
 	return color;
 }
 
-Shape* Shape::clone() const {
-	Shape* shape = new Shape();
-	*shape = *this;
-	return shape;
-}
-
-
-void Shape::shift(const Point& P) {
-	center += P;
-}
-
-void Shape::rotation(double theta) {
-	phi += theta;
-}
-
-void Shape::rotation(double theta, const Point& P) {
-	center = center.rotation(theta, P);
-	phi += theta;
-}
-
-Point Shape::absolute(const Point& P) const {
-	return center + P.rotation(phi);
-}
-
-Point Shape::relative(const Point& P) const {
-	return (P - center).rotation(-phi);
-}
-
 Point Shape::point(const string& name) const { // fake definition : Shape::point won't ever be called
 	if (name == "c")
 		return center;
@@ -365,12 +337,6 @@ string Shape::name(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 		throw ParseException("already used shape name " + name);
 
 	return name;
-}
-
-Shape* Ellipse::clone() const {
-	Ellipse* shape = new Ellipse();
-	*shape = *this;
-	return shape;
 }
 
 Point Ellipse::point(const string& name) const {
@@ -444,12 +410,6 @@ void Ellipse::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Ellipse(center, a, b));
 }
 
-Shape* Circle::clone() const {
-	Circle* shape = new Circle();
-	*shape = *this;
-	return shape;
-}
-
 Point Circle::point(const string& name) const {
 	Point P;
 
@@ -508,12 +468,6 @@ Rectangle::Rectangle(Point center, double width, double height) : width(width), 
 	vertices.push_back(Point(width / 2, -height / 2));
 	vertices.push_back(Point(-width / 2, -height / 2));
 	vertices.push_back(Point(-width / 2, height / 2));
-}
-
-Shape* Rectangle::clone() const {
-	Rectangle* shape = new Rectangle();
-	*shape = *this;
-	return shape;
 }
 
 Point Rectangle::point(const string& name) const {
@@ -577,12 +531,6 @@ void Rectangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Rectangle(center, width, height));
 }
 
-Shape* Triangle::clone() const {
-	Triangle* shape = new Triangle();
-	*shape = *this;
-	return shape;
-}
-
 Point Triangle::point(const string& name) const {
 	Point P;
 
@@ -637,43 +585,35 @@ void Triangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 void Shift::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	string name;
 	Point P;
-	Shape* shape;
+	shape_ptr shape;
 
 	try {
 		name = Shape::name(cursor, shapes);
 		P = Point::parse(cursor, shapes);
-		shape = (*Shape::parse(cursor, shapes)).clone();
+		shape = Shape::parse(cursor, shapes);
 	} catch (ParseException& e) {
 		throw ParseException(string(e.what()) + " -> invalid shift declaration");
 	}
 
-	(*shape).shift(P);
-	shapes[name] = shape_ptr(shape);
+	shapes[name] = shape_ptr(new Shift(P, shape));
 }
 
 void Rotation::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	string name;
 	double theta;
 	Point P;
-	Shape* shape;
+	shape_ptr shape;
 
 	try {
 		name = Shape::name(cursor, shapes);
 		theta = M_PI * Number::parse(cursor, shapes) / 180;
 		P = Point::parse(cursor, shapes);
-		shape = (*Shape::parse(cursor, shapes)).clone();
+		shape = Shape::parse(cursor, shapes);
 	} catch (ParseException& e) {
 		throw ParseException(string(e.what()) + " -> invalid rotation declaration");
 	}
 
-	(*shape).rotation(theta, P);
-	shapes[name] = shape_ptr(shape);
-}
-
-Shape* Union::clone() const {
-	Union* shape = new Union();
-	*shape = *this;
-	return shape;
+	shapes[name] = shape_ptr(new Rotation(theta, P, shape));
 }
 
 Point Union::point(const string& name) const {
@@ -689,10 +629,8 @@ Point Union::point(const string& name) const {
 }
 
 bool Union::has(const Point& P) const {
-	Point Q = this->relative(P);
-
 	for (auto it = set.begin(); it != set.end(); it++)
-		if ((**it).has(Q))
+		if ((**it).has(P))
 			return true;
 
 	return false;
@@ -721,12 +659,6 @@ void Union::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Union(set));
 }
 
-Shape* Difference::clone() const {
-	Difference* shape = new Difference();
-	*shape = *this;
-	return shape;
-}
-
 Point Difference::point(const string& name) const {
 	Point P;
 
@@ -737,12 +669,6 @@ Point Difference::point(const string& name) const {
 	}
 
 	return P;
-}
-
-bool Difference::has(const Point& P) const {
-	Point Q = this->relative(P);
-
-	return (*in).has(Q) && !(*out).has(Q);
 }
 
 void Difference::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
