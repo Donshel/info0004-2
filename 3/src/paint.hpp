@@ -5,14 +5,10 @@
 
 class Paint {
 	public:
+		unsigned long width, height;
+		
 		Paint() {}
 		Paint(const std::vector<std::string>& input);
-
-		/**
-		 * @return width, respectively height, of the paint
-		 */
-		unsigned long _width() const;
-		unsigned long _height() const;
 
 		/**
 		 * Print a small report of the paint.
@@ -28,8 +24,6 @@ class Paint {
 
 	private:
 		static const std::string keyword;
-
-		unsigned long width, height;
 
 		/**
 		 * cursor is the cursor to the input text

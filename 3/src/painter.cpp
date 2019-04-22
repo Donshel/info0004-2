@@ -6,7 +6,7 @@
 
 using namespace std;
 
-static ostream& operator <<(ostream& out, const Color& color);
+static ostream& operator <<(ostream& out, const Color& color) { return out << color.r << color.g << color.b; };
 static ostream& operator <<(ostream& out, const Paint& paint);
 
 int main(int argc, char* argv[]) {
@@ -53,12 +53,8 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-inline ostream& operator <<(ostream& out, const Color& color) {
-	return out << color.r << color.g << color.b;
-}
-
 ostream& operator <<(ostream& out, const Paint& paint) {
-	unsigned long w = paint._width(), h = paint._height();
+	unsigned long w = paint.width, h = paint.height;
 
     // Header
     out << "P6 " << w << ' ' << h << " 255\n";
@@ -66,7 +62,7 @@ ostream& operator <<(ostream& out, const Paint& paint) {
     // Pixels
     for (size_t y = 0; y < h; y++)
         for (size_t x = 0; x < w; x++)
-            out << paint.pixel(x, h - y - 1); // Reverse Y direction
+            out << paint.pixel(x, h - y - 1);
 
     return out;
 }

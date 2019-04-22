@@ -76,9 +76,9 @@ double Number::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 			}
 
 			if (proj == "x")
-				n = point._x();
+				n = point.x;
 			else if (proj == "y")
-				n = point._y();
+				n = point.y;
 			else
 				throw ParseException("expected x or y, got " + proj);
 
@@ -139,47 +139,15 @@ long Number::integer(const string& number) {
 	return stod(number);
 }
 
-inline double Point::_x() const {
-	return x;
-}
-
-inline double Point::_y() const {
-	return y;
-}
-
-Point Point::rotation(double theta) const {
+inline Point Point::rotation(double theta) const {
 	double c = cos(theta);
 	double s = sin(theta);
 
 	return Point(c * x - s * y, s * x + c * y);
 }
 
-Point Point::rotation(double theta, const Point& P) const {
+inline Point Point::rotation(double theta, const Point& P) const {
 	return (*this - P).rotation(theta) + P;
-}
-
-inline double Point::cross(const Point& v1, const Point& v2) {
-	return v1._x() * v2._y() - v2._x() * v1._y();
-}
-
-inline bool Point::operator ==(const Point& P) const {
-	return this->x == P.x && this->y == P.y;
-}
-
-inline Point Point::operator +(const Point& P) const {
-	return Point(this->x + P.x, this->y + P.y);
-}
-
-inline Point Point::operator -(const Point& P) const {
-	return Point(this->x - P.x, this->y - P.y);
-}
-
-inline Point Point::operator *(double n) const {
-	return Point(this->x * n, this->y * n);
-}
-
-inline Point Point::operator /(double n) const {
-	return Point(this->x / n, this->y / n);
 }
 
 Point& Point::operator +=(const Point& P) {
@@ -339,13 +307,6 @@ Shape* Shape::clone() const {
 	return shape;
 }
 
-inline Point Shape::_center() const {
-	return center;
-}
-
-inline double Shape::_phi() const {
-	return phi;
-}
 
 void Shape::shift(const Point& P) {
 	center += P;
@@ -447,7 +408,7 @@ Point Ellipse::point(const string& name) const {
 bool Ellipse::has(const Point& P) const {
 	Point Q = this->relative(P);
 
-	if (pow(Q._x() / a, 2) + pow(Q._y() / b, 2) <= 1)
+	if (pow(Q.x / a, 2) + pow(Q.y / b, 2) <= 1)
 		return true;
 
 	return false;
@@ -587,7 +548,7 @@ bool Rectangle::has(const Point& P) const {
 
 	double w = width / 2, h = height / 2;
 
-	if (Q._x() <= w && Q._x() >= -w && Q._y() <= h && Q._y() >= -h)
+	if (Q.x <= w && Q.x >= -w && Q.y <= h && Q.y >= -h)
 		return true;
 
 	return false;
@@ -646,14 +607,13 @@ Point Triangle::point(const string& name) const {
 }
 
 bool Triangle::has(const Point& P) const {
+	Point Q = this->relative(P);
+
 	bool b[3];
-	Point v[] = {P - this->absolute(vertices[0]), P - this->absolute(vertices[1]), P - this->absolute(vertices[2])};
+	Point v[] = {Q - vertices[0], Q - vertices[1], Q - vertices[2]};
 
 	for (size_t i = 0; i < 3; i++)
-		if (v[i] == Point())
-			return 1;
-		else
-			b[i] = Point::cross(v[i], v[(i + 1) % 3]) >= 0;
+		b[i] = Point::cross(v[i], v[(i + 1) % 3]) >= 0;
 
 	return (b[0] == b[1]) && (b[1] == b[2]);
 }

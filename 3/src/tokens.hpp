@@ -59,24 +59,10 @@ class Number {
 
 class Point {
 	public:
+		double x, y;
+
 		Point() : x(0), y(0) {}
 		Point(double x, double y) : x(x), y(y) {}
-
-		/**
-		 * @return x, respectively y, coordinate of the point
-		 */
-		double _x() const;
-		double _y() const;
-
-		/**
-		 * @return the norm of a vector
-		 */
-		double norm() const;
-
-		/**
-		 * @return the angle of a vector
-		 */
-		double angle() const;
 
 		/**
 		 * Rotation of a point around origin.
@@ -95,14 +81,14 @@ class Point {
 		/**
 		 * @return the cross product between two vectors
 		 */
-		static double cross(const Point& v1, const Point& v2);
+		static double cross(const Point& v1, const Point& v2) { return v1.x * v2.y - v2.x * v1.y; };
 
-		bool operator ==(const Point& P) const;
+		bool operator ==(const Point& P) const { return x == P.x && y == P.y; };
 
-		Point operator +(const Point& P) const;
-		Point operator -(const Point& P) const;
-		Point operator *(double n) const;
-		Point operator /(double n) const;
+		Point operator +(const Point& P) const { return Point(x + P.x, y + P.y); };
+		Point operator -(const Point& P) const { return Point(x - P.x, y - P.y); };
+		Point operator *(double n) const { return Point(x * n, y * n); };
+		Point operator /(double n) const { return Point(x / n, y / n); };
 
 		Point& operator +=(const Point& P);
 		Point& operator -=(const Point& P);
@@ -124,9 +110,6 @@ class Point {
 		 * @return the string as a point
 		 */
 		static Point named(const std::string& point, const std::map<std::string, shape_ptr>& shapes);
-
-	private:
-		double x, y;
 };
 
 class Color {
@@ -159,9 +142,6 @@ class Color {
 class Shape {
 	public:
 		virtual Shape* clone() const;
-
-		Point _center() const;
-		double _phi() const;
 
 		void shift(const Point& P);
 		void rotation(double theta);

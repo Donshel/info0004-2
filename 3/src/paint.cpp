@@ -9,14 +9,6 @@ Paint::Paint(const vector<string>& input) {
 	this->parse();
 }
 
-unsigned long Paint::_width() const {
-	return width;
-}
-
-unsigned long Paint::_height() const {
-	return height;
-}
-
 void Paint::report() const {
 	cout << "Number of shapes: " << shapes.size() << endl;
 	cout << "Number of colors: " << colors.size() << endl;
