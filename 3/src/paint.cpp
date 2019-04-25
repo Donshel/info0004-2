@@ -78,12 +78,12 @@ void Paint::keyParse() {
 	this->height = height;
 }
 
-Color Paint::pixel(double x, double y) const {
+const Color* Paint::pixel(double x, double y) const {
 	Point P = Point(x, y);
 
 	for (auto it = this->fills.rbegin(); it != this->fills.rend(); it++)
-		if ((*(*it).shape).has(P))
-			return *(*it).color;
+		if (it->shape->has(P))
+			return it->color.get();
 
-	return Color();
+	return new Color();
 }

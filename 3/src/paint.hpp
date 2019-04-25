@@ -20,7 +20,7 @@ class Paint {
 		 *
 		 * @return the color of a Point in the paint
 		 */
-		Color pixel(double x, double y) const;
+		const Color* pixel(double x, double y) const;
 
 	private:
 		static const std::string keyword;

@@ -6,7 +6,7 @@
 
 using namespace std;
 
-static ostream& operator <<(ostream& out, const Color& color) { return out << color.r << color.g << color.b; };
+static ostream& operator <<(ostream& out, const Color* color) { return out << color->r << color->g << color->b; };
 static ostream& operator <<(ostream& out, const Paint& paint);
 
 int main(int argc, char* argv[]) {

@@ -261,8 +261,8 @@ class Shift : public Shape {
 		static const std::string keyword;
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
-		Point point(const std::string& name) const { return this->absolute((*shape).point(name)); };
-		bool has(const Point& P) const { return (*shape).has(this->relative(P)); };
+		Point point(const std::string& name) const { return this->absolute(shape->point(name)); };
+		bool has(const Point& P) const { return shape->has(this->relative(P)); };
 
 	protected:
 		shape_ptr shape;
@@ -275,8 +275,8 @@ class Rotation : public Shape {
 		static const std::string keyword;
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
-		Point point(const std::string& name) const { return this->absolute((*shape).point(name)); };
-		bool has(const Point& P) const { return (*shape).has(this->relative(P)); };
+		Point point(const std::string& name) const { return this->absolute(shape->point(name)); };
+		bool has(const Point& P) const { return shape->has(this->relative(P)); };
 
 	protected:
 		double theta;
@@ -308,7 +308,7 @@ class Difference : public Shape {
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
-		bool has(const Point& P) const { return (*in).has(P) && !(*out).has(P); };
+		bool has(const Point& P) const { return in->has(P) && !out->has(P); };
 
 	protected:
 		shape_ptr in, out;

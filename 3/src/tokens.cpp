@@ -237,12 +237,12 @@ Point Point::named(const string& word, const map<string, shape_ptr>& shapes) {
 	if (it == shapes.end())
 		throw ParseException("unknown shape " + name);
 
-	const Shape* shape = (*it).second.get();
+	const Shape* shape = it->second.get();
 
 	string point = word.substr(pos + 1);
 	Name::valid(point);
 
-	return (*shape).point(point);
+	return shape->point(point);
 }
 
 void Color::keyParse(Cursor& cursor, map<string, color_ptr>& colors, const map<string, shape_ptr>& shapes) {
@@ -292,7 +292,7 @@ color_ptr Color::parse(Cursor& cursor, const map<string, color_ptr>& colors, con
 			if (it == colors.end())
 				throw ParseException("unknown color " + word);
 
-			color = (*it).second;
+			color = it->second;
 		}
 	} catch (ParseException& e) {
 		throw ParseException(string(e.what()) + " -> invalid color");
@@ -324,7 +324,7 @@ shape_ptr Shape::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 	if (it == shapes.end())
 		throw ParseException("unknown shape " + name);
 
-	return (*it).second;
+	return it->second;
 }
 
 string Shape::name(Cursor& cursor, const map<string, shape_ptr>& shapes) {
@@ -620,7 +620,7 @@ Point Union::point(const string& name) const {
 	Point P;
 
 	try {
-		P = this->absolute((*set[0]).point(name));
+		P = this->absolute(set[0]->point(name));
 	} catch (ParseException& e) {
 		throw ParseException(string(e.what()) + "-> invalid union named point");
 	}
@@ -630,7 +630,7 @@ Point Union::point(const string& name) const {
 
 bool Union::has(const Point& P) const {
 	for (auto it = set.begin(); it != set.end(); it++)
-		if ((**it).has(P))
+		if ((*it)->has(P))
 			return true;
 
 	return false;
@@ -663,7 +663,7 @@ Point Difference::point(const string& name) const {
 	Point P;
 
 	try {
-		P = this->absolute((*in).point(name));
+		P = this->absolute(in->point(name));
 	} catch (ParseException& e) {
 		throw ParseException(string(e.what()) + "-> invalid difference named point");
 	}
