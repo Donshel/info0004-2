@@ -199,11 +199,12 @@ class Ellipse : public Shape {
 		virtual bool has(const Point& P) const;
 
 	protected:
-		double a, b;
-
 		Ellipse(Point center, double a, double b) : a(a), b(b) { this->center = center; }
 
 		Point border(double theta) const;
+
+	private:
+		double a, b;
 };
 
 class Circle : public Ellipse {
@@ -213,7 +214,7 @@ class Circle : public Ellipse {
 
 		Point point(const std::string& name) const;
 
-	protected:
+	private:
 		Circle(Point center, double radius) : Ellipse(center, radius, radius) {}
 };
 
@@ -238,7 +239,7 @@ class Rectangle : public Polygon {
 		Point point(const std::string& name) const;
 		bool has(const Point& P) const;
 
-	protected:
+	private:
 		double width, height;
 
 		Rectangle(Point center, double width, double height);
@@ -252,7 +253,7 @@ class Triangle : public Polygon {
 		Point point(const std::string& name) const;
 		bool has(const Point& P) const;
 		
-	protected:
+	private:
 		Triangle(const std::vector<Point>& vertices) : Polygon(vertices) {}
 };
 
@@ -264,7 +265,7 @@ class Shift : public Shape {
 		Point point(const std::string& name) const { return this->absolute(shape->point(name)); };
 		bool has(const Point& P) const { return shape->has(this->relative(P)); };
 
-	protected:
+	private:
 		shape_ptr shape;
 
 		Shift(const Point& P, shape_ptr& shape) : shape(shape) { this->center = P; }
@@ -278,7 +279,7 @@ class Rotation : public Shape {
 		Point point(const std::string& name) const { return this->absolute(shape->point(name)); };
 		bool has(const Point& P) const { return shape->has(this->relative(P)); };
 
-	protected:
+	private:
 		double theta;
 		shape_ptr shape;
 
@@ -296,7 +297,7 @@ class Union : public Shape {
 		Point point(const std::string& name) const;
 		bool has(const Point& P) const;
 
-	protected:
+	private:
 		std::vector<shape_ptr> set;
 
 		Union(std::vector<shape_ptr>& set) : set(set) {}
@@ -310,7 +311,7 @@ class Difference : public Shape {
 		Point point(const std::string& name) const;
 		bool has(const Point& P) const { return in->has(P) && !out->has(P); };
 
-	protected:
+	private:
 		shape_ptr in, out;
 
 		Difference(shape_ptr& in, shape_ptr& out) : in(in), out(out) {}
