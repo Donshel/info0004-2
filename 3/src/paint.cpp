@@ -79,7 +79,7 @@ void Paint::keyParse() {
 }
 
 const Color* Paint::pixel(double x, double y) const {
-	Point P = Point(x, y);
+	Point P = Point(x + 0.5, y + 0.5);
 
 	for (auto it = this->fills.rbegin(); it != this->fills.rend(); it++)
 		if (it->shape->has(P))
