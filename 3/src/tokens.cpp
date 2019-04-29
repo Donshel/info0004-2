@@ -281,7 +281,7 @@ color_ptr Color::parse(Cursor& cursor, const map<string, color_ptr>& colors, con
 			if (cursor.nextWord() != "}")
 				throw ParseException("missing }");
 
-			uint8_t r = RGB[0] * 255, g = RGB[1] * 255, b = RGB[2] * 255;
+			uint8_t r = round(RGB[0] * 255), g = round(RGB[1] * 255), b = round(RGB[2] * 255);
 
 			color = color_ptr(new Color(r, g, b));
 		} else {
