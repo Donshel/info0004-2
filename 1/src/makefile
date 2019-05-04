@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++11 -Wall -Wextra
+CFLAGS = -std=c++11 -O3 -Wall -Wextra
 CFILES = main.cpp anagrams.cpp
 OUT = ../bin/anagrams
 
