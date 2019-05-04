@@ -447,13 +447,12 @@ void Circle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 Polygon::Polygon(const vector<Point>& vertices) {
 	center = Point();
 
-	for (auto it = vertices.begin(); it != vertices.end(); it++)
+	for (auto it = vertices.begin(); it != vertices.end(); it++) {
+		this->vertices.push_back(*it);
 		center += *it;
+	}
 
 	center /= vertices.size();
-
-	for (auto it = vertices.begin(); it != vertices.end(); it++)
-		this->vertices.push_back(*it - center);
 }
 
 Point Polygon::midpoint(size_t n) const {
@@ -464,10 +463,10 @@ Point Polygon::midpoint(size_t n) const {
 Rectangle::Rectangle(Point center, double width, double height) : width(width), height(height) {
 	this->center = center;
 
-	vertices.push_back(Point(width / 2, height / 2));
-	vertices.push_back(Point(width / 2, -height / 2));
-	vertices.push_back(Point(-width / 2, -height / 2));
-	vertices.push_back(Point(-width / 2, height / 2));
+	vertices.push_back(this->absolute(Point(width / 2, height / 2)));
+	vertices.push_back(this->absolute(Point(width / 2, -height / 2)));
+	vertices.push_back(this->absolute(Point(-width / 2, -height / 2)));
+	vertices.push_back(this->absolute(Point(-width / 2, height / 2)));
 }
 
 Point Rectangle::point(const string& name) const {
@@ -494,7 +493,7 @@ Point Rectangle::point(const string& name) const {
 	else
 		throw ParseException("invalid rectangle named point " + name);
 
-	return this->absolute(P);
+	return P;
 }
 
 bool Rectangle::has(const Point& P) const {
@@ -551,17 +550,23 @@ Point Triangle::point(const string& name) const {
 	else
 		throw ParseException("invalid triangle named point " + name);
 
-	return this->absolute(P);
+	return P;
 }
 
 bool Triangle::has(const Point& P) const {
-	Point Q = this->relative(P);
-
+	double c;
 	bool b[3];
-	Point v[] = {Q - vertices[0], Q - vertices[1], Q - vertices[2]};
+
+	Point v[] = {P - vertices[0], P - vertices[1], P - vertices[2]};
 
 	for (size_t i = 0; i < 3; i++)
-		b[i] = Point::cross(v[i], v[(i + 1) % 3]) >= 0;
+		if ((c = Point::cross(v[i], v[(i + 1) % 3])) == 0)
+			if (v[i].x * v[(i + 1) % 3].x <= 0)
+				return true;
+			else
+				return false;
+		else
+			b[i] = c > 0;
 
 	return (b[0] == b[1]) && (b[1] == b[2]);
 }
