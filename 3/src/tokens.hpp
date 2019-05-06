@@ -201,8 +201,6 @@ class Ellipse : public Shape {
 	protected:
 		Ellipse(Point center, double a, double b) : a(a), b(b) { this->center = center; }
 
-		Point border(double theta) const;
-
 	private:
 		double a, b;
 };

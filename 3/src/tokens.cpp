@@ -340,48 +340,40 @@ string Shape::name(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 }
 
 Point Ellipse::point(const string& name) const {
-	double c = sqrt(pow(a, 2) - pow(b, 2));
-	double theta;
+	Point P;
 
 	if (name == "c")
-		return center;
+		P = Point(0, 0);
 	else if (name == "e")
-		theta = 0;
+		P = Point(a, 0);
 	else if (name == "ne")
-		theta = M_PI / 4;
+		P = Point(a / 2 * M_SQRT2, b / 2 * M_SQRT2);
 	else if (name == "n")
-		theta = M_PI / 2;
+		P = Point(0, b);
 	else if (name == "nw")
-		theta = 3 * M_PI / 4;
+		P = Point(-a / 2 * M_SQRT2 , b / 2 * M_SQRT2);
 	else if (name == "w")
-		theta = M_PI;
+		P = Point(-a, 0);
 	else if (name == "sw")
-		theta = 5 * M_PI / 4;
+		P = Point(-a / 2 * M_SQRT2 , -b / 2 * M_SQRT2);
 	else if (name == "s")
-		theta = 3 * M_PI / 2;
+		P = Point(0, -b);
 	else if (name == "se")
-		theta = 7 * M_PI / 4;
+		P = Point(a / 2 * M_SQRT2 , -b / 2 * M_SQRT2);
 	else if (name == "f1")
-		return this->absolute(Point(c, 0));
+		P = Point(sqrt(pow(a, 2) - pow(b, 2)), 0);
 	else if (name == "f2")
-		return this->absolute(Point(-c, 0));
+		P = Point(-sqrt(pow(a, 2) - pow(b, 2)), 0);
 	else
 		throw ParseException("invalid ellipse named point " + name);
 
-	return this->absolute(this->border(theta));
+	return this->absolute(P);
 }
 
 bool Ellipse::has(const Point& P) const {
 	Point Q = this->relative(P);
 
-	if (pow(Q.x / a, 2) + pow(Q.y / b, 2) <= 1)
-		return true;
-
-	return false;
-}
-
-inline Point Ellipse::border(double theta) const {
-	return Point(a * cos(theta), b * sin(theta));
+	return pow(Q.x / a, 2) + pow(Q.y / b, 2) <= 1;
 }
 
 void Ellipse::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
