@@ -452,13 +452,13 @@ Point Polygon::midpoint(size_t n) const {
 	return (vertices[n % l] + vertices[(n + 1) % l]) / 2;
 }
 
-Rectangle::Rectangle(Point center, double width, double height) : width(width), height(height) {
+Rectangle::Rectangle(Point center, double width, double height) : width(width / 2), height(height / 2) {
 	this->center = center;
 
-	vertices.push_back(this->absolute(Point(width / 2, height / 2)));
-	vertices.push_back(this->absolute(Point(width / 2, -height / 2)));
-	vertices.push_back(this->absolute(Point(-width / 2, -height / 2)));
-	vertices.push_back(this->absolute(Point(-width / 2, height / 2)));
+	vertices.push_back(this->absolute(Point(this->width, this->height)));
+	vertices.push_back(this->absolute(Point(this->width, -this->height)));
+	vertices.push_back(this->absolute(Point(-this->width, -this->height)));
+	vertices.push_back(this->absolute(Point(-this->width, this->height)));
 }
 
 Point Rectangle::point(const string& name) const {
@@ -491,12 +491,7 @@ Point Rectangle::point(const string& name) const {
 bool Rectangle::has(const Point& P) const {
 	Point Q = this->relative(P);
 
-	double w = width / 2, h = height / 2;
-
-	if (Q.x <= w && Q.x >= -w && Q.y <= h && Q.y >= -h)
-		return true;
-
-	return false;
+	return abs(Q.x) <= width && abs(Q.y) <= height;
 }
 
 void Rectangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
