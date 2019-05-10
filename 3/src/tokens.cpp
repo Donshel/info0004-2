@@ -309,10 +309,7 @@ Point Shape::point(const string& name) const { // fake definition : Shape::point
 }
 
 bool Shape::has(const Point& P) const { // fake definition : Shape::in won't ever be called
-	if (center == P)
-		return true;
-
-	return false;
+	return center == P;
 }
 
 shape_ptr Shape::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
@@ -442,24 +439,9 @@ void Circle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Circle(center, radius));
 }
 
-Polygon::Polygon(const vector<Point>& vertices) {
-	center = Point();
-
-	for (auto it = vertices.begin(); it != vertices.end(); it++) {
-		this->vertices.push_back(*it);
-		center += *it;
-	}
-
-	center /= vertices.size();
-}
-
-Point Polygon::midpoint(size_t n) const {
-	int l = vertices.size();
-	return (vertices[n % l] + vertices[(n + 1) % l]) / 2;
-}
-
 Rectangle::Rectangle(Point center, double width, double height) : width(width / 2), height(height / 2) {
 	this->center = center;
+	n = 4;
 
 	vertices.push_back(this->absolute(Point(this->width, this->height)));
 	vertices.push_back(this->absolute(Point(this->width, -this->height)));
@@ -552,14 +534,16 @@ bool Triangle::has(const Point& P) const {
 
 	Point v[] = {P - vertices[0], P - vertices[1], P - vertices[2]};
 
-	for (size_t i = 0; i < 3; i++)
-		if ((c = Point::cross(v[i], v[(i + 1) % 3])) == 0)
+	for (size_t i = 0; i < 3; i++) {
+		c = Point::cross(v[i], v[(i + 1) % 3]);
+		if (c == 0)
 			if (v[i].x * v[(i + 1) % 3].x <= 0)
 				return true;
 			else
 				return false;
 		else
 			b[i] = c > 0;
+	}
 
 	return (b[0] == b[1]) && (b[1] == b[2]);
 }

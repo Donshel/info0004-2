@@ -218,15 +218,16 @@ class Circle : public Ellipse {
 
 class Polygon : public Shape {
 	protected:
+		unsigned n;
 		std::vector<Point> vertices;
 
 		Polygon() {}
-		Polygon(const std::vector<Point>& vertices);
+		Polygon(const std::vector<Point>& vertices) : vertices(vertices) { n = vertices.size(); }
 
 		/**
 		 * @return the n_th midpoint of the polygon
 		 */
-		Point midpoint(size_t n) const;
+		Point midpoint(size_t m) const { return (vertices[m % n] + vertices[(m + 1) % n]) / 2; };
 };
 
 class Rectangle : public Polygon {
