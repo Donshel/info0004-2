@@ -1,14 +1,10 @@
 #include <iostream>
 #include <fstream>
-#include <bitset>
 #include <chrono>
 
 #include "paint.hpp"
 
 using namespace std;
-
-static ostream& operator <<(ostream& out, const Color* color) { return out << color->r << color->g << color->b; };
-static ostream& operator <<(ostream& out, const Paint& paint);
 
 int main(int argc, char* argv[]) {
 
@@ -64,9 +60,9 @@ int main(int argc, char* argv[]) {
 	start = chrono::steady_clock::now();
 
 	ofstream output;
-    output.open(ppm);
+    output.open(ppm, ios::binary);
 
-    output << paint;
+    output << paint.image();
 
     output.close();
 
@@ -77,18 +73,4 @@ int main(int argc, char* argv[]) {
 	cout << "Wrote " + ppm + " in " << time << " ms" << endl;
 
 	return 0;
-}
-
-ostream& operator <<(ostream& out, const Paint& paint) {
-	unsigned long w = paint.width, h = paint.height;
-
-    // Header
-    out << "P6 " << w << ' ' << h << " 255\n";
-
-    // Pixels
-    for (size_t y = 0; y < h; y++)
-        for (size_t x = 0; x < w; x++)
-            out << paint.pixel(x, h - y - 1);
-
-    return out;
 }

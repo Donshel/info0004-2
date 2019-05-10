@@ -301,17 +301,6 @@ color_ptr Color::parse(Cursor& cursor, const map<string, color_ptr>& colors, con
 	return color;
 }
 
-Point Shape::point(const string& name) const { // fake definition : Shape::point won't ever be called
-	if (name == "c")
-		return center;
-	else
-		throw ParseException("invalid shape named point " + name);
-}
-
-bool Shape::has(const Point& P) const { // fake definition : Shape::in won't ever be called
-	return center == P;
-}
-
 shape_ptr Shape::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 	string name = cursor.nextWord();
 	Name::valid(name);
@@ -439,6 +428,24 @@ void Circle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Circle(center, radius));
 }
 
+shape_dom Polygon::domain() const {
+	Point bl = vertices[0], tr = vertices[0];
+
+	for (auto it = vertices.begin() + 1; it != vertices.end(); it++) {
+		if (it->x < bl.x)
+			bl.x = it->x;
+		else if (it->x > tr.x)
+			tr.x = it->x;
+
+		if (it->y < bl.y)
+			bl.y = it->y;
+		else if (it->y > tr.y)
+			tr.y = it->y;
+	}
+
+	return {bl, tr};
+}
+
 Rectangle::Rectangle(Point center, double width, double height) : width(width / 2), height(height / 2) {
 	this->center = center;
 	n = 4;
@@ -564,6 +571,12 @@ void Triangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Triangle(vertices));
 }
 
+shape_dom Shift::domain() const {
+	shape_dom dom = shape->domain();
+
+	return {this->absolute(dom[0]), this->absolute(dom[1])};
+}
+
 void Shift::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	string name;
 	Point P;
@@ -578,6 +591,32 @@ void Shift::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	}
 
 	shapes[name] = shape_ptr(new Shift(P, shape));
+}
+
+shape_dom Rotation::domain() const {
+	shape_dom dom = shape->domain();
+
+	vector<Point> vertices;
+	vertices.push_back(Point(dom[0].x, dom[1].y).rotation(theta, center));
+	vertices.push_back(Point(dom[1].x, dom[0].y).rotation(theta, center));
+	vertices.push_back(dom[0].rotation(theta, center));
+	vertices.push_back(dom[1].rotation(theta, center));
+
+	Point bl = vertices[0], tr = vertices[0];
+
+	for (auto it = vertices.begin() + 1; it != vertices.end(); it++) {
+		if (it->x < bl.x)
+			bl.x = it->x;
+		else if (it->x > tr.x)
+			tr.x = it->x;
+
+		if (it->y < bl.y)
+			bl.y = it->y;
+		else if (it->y > tr.y)
+			tr.y = it->y;
+	}
+
+	return {bl, tr};
 }
 
 void Rotation::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
@@ -616,6 +655,29 @@ bool Union::has(const Point& P) const {
 			return true;
 
 	return false;
+}
+
+shape_dom Union::domain() const {
+	shape_dom dom = set[0]->domain();
+	Point bl = dom[0], tr = dom[1];
+
+	for (auto it = set.begin() + 1; it != set.end(); it++) {
+		dom = (*it)->domain();
+
+		if (dom[0].x < bl.x)
+			bl.x = dom[0].x;
+
+		if (dom[0].y < bl.y)
+			bl.y = dom[0].y;
+
+		if (dom[1].x > tr.x)
+			tr.x = dom[1].x;
+
+		if (dom[1].y > tr.y)
+			tr.y = dom[1].y;
+	}
+
+	return {bl, tr};
 }
 
 void Union::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {

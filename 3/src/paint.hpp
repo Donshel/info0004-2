@@ -1,7 +1,7 @@
 #ifndef PAINT
 #define PAINT
 
-#include "tokens.hpp"
+#include "image.hpp"
 
 class Paint {
 	public:
@@ -16,15 +16,14 @@ class Paint {
 		void report() const;
 
 		/**
-		 * Search the color of the last fill which shape contains the point (x, y).
-		 *
-		 * @return the color of a Point in the paint
+		 * Transform the paint into an image.
+		 * 
+		 * @return the image
 		 */
-		const Color* pixel(double x, double y) const;
+		Image image() const;
 
 	private:
 		static const std::string keyword;
-		Color background;
 
 		/**
 		 * cursor is the cursor to the input text

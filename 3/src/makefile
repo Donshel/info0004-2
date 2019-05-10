@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++11 -O3 -Wall -Wextra
+CFLAGS = -std=c++14 -O3 -Wall -Wextra
 CFILES = *.cpp
 OUT = ../bin/painter
 

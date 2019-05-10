@@ -57,6 +57,34 @@ void Paint::parse() {
 	}
 }
 
+Image Paint::image() const {
+	Image im = Image(width, height);
+	bool isset [width * height] = {};
+	int w = width - 1, h = height - 1, x_min, y_min, x_max, y_max;
+
+	shape_dom dom;
+	Color color;
+
+	for (auto it = fills.rbegin(); it != fills.rend(); it++) {
+		dom = it->shape->domain();
+		color = *(it->color);
+
+		x_min = max(int(dom[0].x), 0);
+		y_min = max(int(dom[0].y), 0);
+		x_max = min(int(++dom[1].x), w);
+		y_max = min(int(++dom[1].y), h);
+
+		for (int y = y_min; y <= y_max; y++)
+			for (int x = x_min, i = y * width + x; x <= x_max; x++, i++)
+				if (!isset[i] && it->shape->has(Point(double(x) + 0.5, double(y) + 0.5))) {
+					im(x, y) = color;
+					isset[i] = true;
+				}
+	}
+
+	return im;
+}
+
 const string Paint::keyword = "size";
 
 void Paint::keyParse() {
@@ -76,14 +104,4 @@ void Paint::keyParse() {
 
 	this->width = width;
 	this->height = height;
-}
-
-const Color* Paint::pixel(double x, double y) const {
-	Point P = Point(x + 0.5, y + 0.5);
-
-	for (auto it = this->fills.rbegin(); it != this->fills.rend(); it++)
-		if (it->shape->has(P))
-			return it->color.get();
-
-	return &background;
 }
