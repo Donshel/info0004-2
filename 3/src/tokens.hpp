@@ -199,10 +199,9 @@ class Ellipse : public Shape {
 		virtual bool has(const Point& P) const;
 
 	protected:
-		Ellipse(Point center, double a, double b) : a(a), b(b) { this->center = center; }
-
-	private:
 		double a, b;
+
+		Ellipse(Point center, double a, double b) : a(a), b(b) { this->center = center; }
 };
 
 class Circle : public Ellipse {
@@ -211,6 +210,7 @@ class Circle : public Ellipse {
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
+		bool has(const Point& P) const;
 
 	private:
 		Circle(Point center, double radius) : Ellipse(center, radius, radius) {}

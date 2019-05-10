@@ -373,7 +373,7 @@ Point Ellipse::point(const string& name) const {
 bool Ellipse::has(const Point& P) const {
 	Point Q = this->relative(P);
 
-	return pow(Q.x / a, 2) + pow(Q.y / b, 2) <= 1;
+	return pow(Q.x * b, 2) + pow(Q.y * a, 2) <= pow(a * b, 2);
 }
 
 void Ellipse::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
@@ -415,6 +415,12 @@ Point Circle::point(const string& name) const {
 	}
 
 	return P;
+}
+
+bool Circle::has(const Point& P) const {
+	Point Q = this->relative(P);
+
+	return pow(Q.x, 2) + pow(Q.y, 2) <= pow(a, 2);
 }
 
 void Circle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
