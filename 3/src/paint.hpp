@@ -24,6 +24,7 @@ class Paint {
 
 	private:
 		static const std::string keyword;
+		Color background;
 
 		/**
 		 * cursor is the cursor to the input text

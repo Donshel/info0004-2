@@ -85,5 +85,5 @@ const Color* Paint::pixel(double x, double y) const {
 		if (it->shape->has(P))
 			return it->color.get();
 
-	return new Color();
+	return &background;
 }
