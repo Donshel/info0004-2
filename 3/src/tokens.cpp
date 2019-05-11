@@ -602,21 +602,7 @@ shape_dom Rotation::domain() const {
 	vertices.push_back(dom[0].rotation(theta, center));
 	vertices.push_back(dom[1].rotation(theta, center));
 
-	Point bl = vertices[0], tr = vertices[0];
-
-	for (auto it = vertices.begin() + 1; it != vertices.end(); it++) {
-		if (it->x < bl.x)
-			bl.x = it->x;
-		else if (it->x > tr.x)
-			tr.x = it->x;
-
-		if (it->y < bl.y)
-			bl.y = it->y;
-		else if (it->y > tr.y)
-			tr.y = it->y;
-	}
-
-	return {bl, tr};
+	return Polygon(vertices).domain();
 }
 
 void Rotation::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {

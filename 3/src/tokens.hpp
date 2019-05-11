@@ -228,13 +228,16 @@ class Circle : public Ellipse {
 };
 
 class Polygon : public Shape {
+	public:
+		Polygon(const std::vector<Point>& vertices) : vertices(vertices) { n = vertices.size(); }
+
+		virtual shape_dom domain() const;
+
 	protected:
 		unsigned n;
 		std::vector<Point> vertices;
 
 		Polygon() {}
-		Polygon(const std::vector<Point>& vertices) : vertices(vertices) { n = vertices.size(); }
-		virtual shape_dom domain() const;
 
 		/**
 		 * @return the n_th midpoint of the polygon
