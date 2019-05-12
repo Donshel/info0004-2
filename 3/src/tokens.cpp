@@ -1,5 +1,4 @@
 #define _USE_MATH_DEFINES
-#include <cmath>
 
 #include "tokens.hpp"
 
@@ -49,7 +48,7 @@ double Number::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 	double n;
 
 	if (op == '(' || op == '{' || isalpha(op)) {
-		string word = "", proj;
+		string word, proj;
 		Point point;
 
 		try {
@@ -86,57 +85,21 @@ double Number::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 			throw ParseException(string(e.what()) + " -> invalid number " + word);
 		}
 	} else {
-		string number = cursor.nextWord();
-		string word = number;
+		string number = cursor.nextWord(), word = number;
 
-		try {
-			if (op == '-' || op == '+')
-				word = word.substr(1);
+		if (op == '-' || op == '+')
+			word = word.substr(1);
 
-			size_t pos = word.find_last_of('.');
+		int has_point = 0;
 
-			if (pos == 0)
-				Number::integer(word.substr(1));
-			else
-				if (pos == string::npos || pos == word.length() - 1)
-					Number::integer(word);
-				else {
-					Number::integer(word.substr(0, pos + 1));
-					Number::integer(word.substr(pos + 1));
-				}
+		for (auto it = word.begin(); it != word.end(); it++)
+			if ((!isdigit(*it) && *it != '.') || (*it == '.' && has_point++ > 0))
+				throw ParseException("invalid number " + number);
 
-			n = stod(number);
-		} catch (ParseException& e) {
-			throw ParseException(string(e.what()) + " -> invalid number " + word);
-		}
+		n = stod(number);
 	}
 
 	return n;
-}
-
-long Number::integer(const string& number) {
-	string word = number;
-
-	if (word[0] == '+' || word[0] == '-')
-		word = word.substr(1);
-
-	size_t l = word.length();
-
-	if (l == 0)
-		throw ParseException("expected integer, got " + number);
-
-	size_t pos = word.find_last_of('.');
-	if (pos != string::npos) {
-		if (l == 1 || (pos != l - 1 && stod(word.substr(pos + 1)) != 0))
-			throw ParseException("expected integer, got " + number);
-	} else
-		pos = l;
-
-	for (size_t i = 0; i < pos; i++)
-		if (!isdigit(word[i]))
-			throw ParseException("invalid character " + string(1, word[i]));
-
-	return stod(number);
 }
 
 inline Point Point::rotation(double theta) const {
@@ -231,7 +194,6 @@ Point Point::named(const string& word, const map<string, shape_ptr>& shapes) {
 		throw ParseException("expected point, got " + word);
 
 	string name = word.substr(0, pos);
-	Name::valid(name);
 	auto it = shapes.find(name);
 
 	if (it == shapes.end())
@@ -240,7 +202,6 @@ Point Point::named(const string& word, const map<string, shape_ptr>& shapes) {
 	const Shape* shape = it->second.get();
 
 	string point = word.substr(pos + 1);
-	Name::valid(point);
 
 	return shape->point(point);
 }
@@ -285,8 +246,6 @@ color_ptr Color::parse(Cursor& cursor, const map<string, color_ptr>& colors, con
 
 			color = color_ptr(new Color(r, g, b));
 		} else {
-			Name::valid(word);
-
 			auto it = colors.find(word);
 
 			if (it == colors.end())
@@ -303,8 +262,6 @@ color_ptr Color::parse(Cursor& cursor, const map<string, color_ptr>& colors, con
 
 shape_ptr Shape::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 	string name = cursor.nextWord();
-	Name::valid(name);
-
 	auto it = shapes.find(name);
 
 	if (it == shapes.end())

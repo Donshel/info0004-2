@@ -1,10 +1,11 @@
 #ifndef TOKENS
 #define TOKENS
 
-#include <memory>
-#include <cstdint>
 #include <array>
+#include <cmath>
+#include <cstdint>
 #include <map>
+#include <memory>
 
 #include "cursor.hpp"
 
@@ -50,14 +51,6 @@ class Number {
 		 * @return the token(s) as a number
 		 */
 		static double parse(Cursor& cursor, const std::map<std::string, shape_ptr>& shapes);
-
-		/**
-		 * Parse as an integer the given string.
-		 *
-		 * @throw a ParseException if the string isn't a valide integer
-		 * @return the string as a integer
-		 */
-		static long integer(const std::string& number);
 };
 
 class Point {

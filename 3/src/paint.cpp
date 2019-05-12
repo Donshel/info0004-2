@@ -88,16 +88,16 @@ Image Paint::image() const {
 const string Paint::keyword = "size";
 
 void Paint::keyParse() {
-	long width, height;
+	double width, height, rest;
 
 	try {
-		width = Number::integer(cursor.nextWord());
-		if (width < 0)
-			throw ParseException("expected positive width, got " + to_string(width));
+		rest = modf(Number::parse(cursor, shapes), &width);
+		if (width < 0 || rest != 0)
+			throw ParseException("expected positive integer width, got " + to_string(width + rest));
 
-		height = Number::integer(cursor.nextWord());
-		if (height < 0)
-			throw ParseException("expected positive height, got " + to_string(height));
+		rest = modf(Number::parse(cursor, shapes), &height);
+		if (height < 0 || rest != 0)
+			throw ParseException("expected positive integer height, got " + to_string(height + rest));
 	} catch (ParseException& e) {
 		throw ParseException(string(e.what()) + " -> invalid size declaration");
 	}
