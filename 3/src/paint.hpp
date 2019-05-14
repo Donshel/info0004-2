@@ -2,18 +2,17 @@
 #define PAINT
 
 #include "image.hpp"
+#include "tokens.hpp"
 
 class Paint {
-	public:
-		unsigned long width, height;
-		
+	public:		
 		Paint() {}
 		Paint(const std::vector<std::string>& input);
 
 		/**
-		 * Print a small report of the paint.
+		 * @return a small string report of the paint
 		 */
-		void report() const;
+		std::string report() const;
 
 		/**
 		 * Transform the paint into an image.
@@ -23,13 +22,14 @@ class Paint {
 		Image image() const;
 
 	private:
+		unsigned long width, height;
 		static const std::string keyword;
 
 		/**
 		 * cursor is the cursor to the input text
 		 * shapes is the map of shapes sorted by name
 		 * colors is the map of colors sorted by name
-		 * fills us the vector of fills
+		 * fills is the vector of fills
 		 */
 		Cursor cursor;
 		std::map<std::string, color_ptr> colors;

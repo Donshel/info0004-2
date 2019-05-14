@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include "paint.hpp"
 
 using namespace std;
@@ -9,10 +7,14 @@ Paint::Paint(const vector<string>& input) {
 	this->parse();
 }
 
-void Paint::report() const {
-	cout << "Number of shapes: " << shapes.size() << endl;
-	cout << "Number of colors: " << colors.size() << endl;
-	cout << "Number of fills: " << fills.size() << endl;
+string Paint::report() const {
+	string str;
+
+	str = "Number of shapes: " + to_string(shapes.size()) + '\n';
+	str += "Number of colors: " + to_string(colors.size()) + '\n';
+	str += "Number of fills: " + to_string(fills.size()) + '\n';
+
+	return str;
 }
 
 void Paint::parse() {

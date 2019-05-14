@@ -2,6 +2,7 @@
 #define TOKENS
 
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <map>
@@ -127,7 +128,7 @@ class Color {
 		 * Parse as a color the next token(s) given by cursor.
 		 *
 		 * @throw a ParseException if the token(s) is(are)n't a valid color
-		 * @return the token(s) as a color
+		 * @return the token(s) as a pointer to color
 		 */
 		static color_ptr parse(Cursor& cursor, const std::map<std::string, color_ptr>& colors, const std::map<std::string, shape_ptr>& shapes);
 
@@ -161,7 +162,7 @@ class Shape {
 		 * Parse as a shape name the next token given by cursor.
 		 *
 		 * @throw a ParseException if the token is an unknown shape name
-		 * @return a cpy of the shape which name is the token
+		 * @return a pointer to the shape which name is the token
 		 */
 		static shape_ptr parse(Cursor& cursor, const std::map<std::string, shape_ptr>& shapes);
 
@@ -222,7 +223,7 @@ class Circle : public Ellipse {
 
 class Polygon : public Shape {
 	public:
-		Polygon(const std::vector<Point>& vertices) : vertices(vertices) { n = vertices.size(); }
+		Polygon(const std::vector<Point>& vertices) : vertices(vertices) { assert(vertices.size() > 0); n = vertices.size(); }
 
 		virtual shape_dom domain() const;
 

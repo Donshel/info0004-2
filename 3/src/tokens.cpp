@@ -313,7 +313,7 @@ Point Ellipse::point(const string& name) const {
 	return this->absolute(P);
 }
 
-bool Ellipse::has(const Point& P) const {
+inline bool Ellipse::has(const Point& P) const {
 	Point Q = this->relative(P);
 
 	return pow(Q.x * b, 2) + pow(Q.y * a, 2) <= pow(a * b, 2);
@@ -360,7 +360,7 @@ Point Circle::point(const string& name) const {
 	return P;
 }
 
-bool Circle::has(const Point& P) const {
+inline bool Circle::has(const Point& P) const {
 	Point Q = this->relative(P);
 
 	return pow(Q.x, 2) + pow(Q.y, 2) <= pow(a, 2);
@@ -440,7 +440,7 @@ Point Rectangle::point(const string& name) const {
 	return P;
 }
 
-bool Rectangle::has(const Point& P) const {
+inline bool Rectangle::has(const Point& P) const {
 	Point Q = this->relative(P);
 
 	return abs(Q.x) <= width && abs(Q.y) <= height;
@@ -528,7 +528,7 @@ void Triangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Triangle(vertices));
 }
 
-shape_dom Shift::domain() const {
+inline shape_dom Shift::domain() const {
 	shape_dom dom = shape->domain();
 
 	return {this->absolute(dom[0]), this->absolute(dom[1])};

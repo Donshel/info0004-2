@@ -1,6 +1,6 @@
-#include <iostream>
-#include <fstream>
 #include <chrono>
+#include <fstream>
+#include <iostream>
 
 #include "paint.hpp"
 
@@ -43,32 +43,31 @@ int main(int argc, char* argv[]) {
 	}
 
 	auto end = chrono::steady_clock::now();
-	auto diff = end - start;
-	auto time = chrono::duration <double, milli> (diff).count();
+	auto time = chrono::duration <double, milli> (end - start).count();
 
 	cout << "Parsed " + filename + " in " << time << " ms" << endl;
 
+	// Report
 	cout << "----------" << endl;
 
-	paint.report();
+	cout << paint.report();
 
 	cout << "----------" << endl;
-
-	string ppm = filename.substr(0, filename.find_last_of('.')) + ".ppm";
 
 	// Write
+	string ppm = filename.substr(0, filename.find_last_of('.')) + ".ppm";
+
 	start = chrono::steady_clock::now();
 
 	ofstream output;
-    output.open(ppm, ios::binary);
+	output.open(ppm, ios::binary);
 
-    output << paint.image();
+	output << paint.image();
 
-    output.close();
+	output.close();
 
-    end = chrono::steady_clock::now();
-	diff = end - start;
-	time = chrono::duration <double, milli> (diff).count();
+	end = chrono::steady_clock::now();
+	time = chrono::duration <double, milli> (end - start).count();
 
 	cout << "Wrote " + ppm + " in " << time << " ms" << endl;
 
