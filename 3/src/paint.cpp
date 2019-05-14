@@ -64,17 +64,17 @@ Image Paint::image() const {
 	bool isset [width * height] = {};
 	int w = width - 1, h = height - 1, x_min, y_min, x_max, y_max;
 
-	shape_dom dom;
+	Domain dom;
 	Color color;
 
 	for (auto it = fills.rbegin(); it != fills.rend(); it++) {
 		dom = it->shape->domain();
 		color = *(it->color);
 
-		x_min = max(int(dom[0].x), 0);
-		y_min = max(int(dom[0].y), 0);
-		x_max = min(int(++dom[1].x), w);
-		y_max = min(int(++dom[1].y), h);
+		x_min = max(int(dom.min.x), 0);
+		y_min = max(int(dom.min.y), 0);
+		x_max = min(int(++dom.max.x), w);
+		y_max = min(int(++dom.max.y), h);
 
 		for (int y = y_min; y <= y_max; y++)
 			for (int x = x_min, i = y * width + x; x <= x_max; x++, i++)

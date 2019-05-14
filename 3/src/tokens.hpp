@@ -25,7 +25,6 @@ class Shape;
 
 typedef std::shared_ptr<const Color> color_ptr;
 typedef std::shared_ptr<const Shape> shape_ptr;
-typedef std::array<Point, 2> shape_dom;
 
 class Name {
 	public:
@@ -136,6 +135,8 @@ class Color {
 		Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
 };
 
+struct Domain { Point min; Point max; };
+
 class Shape {
 	public:
 		/**
@@ -154,9 +155,9 @@ class Shape {
 		/**
 		 * Compute the two opposite vertices of a rectangle that fully contains the shape.
 		 * 
-		 * @return a shape_dom, i.e an array of two points
+		 * @return a Domain
 		 */
-		virtual shape_dom domain() const { return {center, center}; }
+		virtual Domain domain() const { return {center, center}; }
 
 		/**
 		 * Parse as a shape name the next token given by cursor.
@@ -201,7 +202,7 @@ class Ellipse : public Shape {
 
 		virtual Point point(const std::string& name) const;
 		virtual bool has(const Point& P) const;
-		virtual shape_dom domain() const { return {this->absolute(Point(-a, -b)), this->absolute(Point(a, b))}; };
+		virtual Domain domain() const { return {this->absolute(Point(-a, -b)), this->absolute(Point(a, b))}; };
 
 	protected:
 		double a, b;
@@ -225,7 +226,7 @@ class Polygon : public Shape {
 	public:
 		Polygon(const std::vector<Point>& vertices) : vertices(vertices) { assert(vertices.size() > 0); n = vertices.size(); }
 
-		virtual shape_dom domain() const;
+		virtual Domain domain() const;
 
 	protected:
 		unsigned n;
@@ -246,7 +247,7 @@ class Rectangle : public Polygon {
 
 		Point point(const std::string& name) const;
 		bool has(const Point& P) const;
-		shape_dom domain() const { return {vertices[2], vertices[0]}; };
+		Domain domain() const { return {vertices[2], vertices[0]}; };
 
 	private:
 		double width, height;
@@ -273,7 +274,7 @@ class Shift : public Shape {
 
 		Point point(const std::string& name) const { return this->absolute(shape->point(name)); };
 		bool has(const Point& P) const { return shape->has(this->relative(P)); };
-		shape_dom domain() const;
+		Domain domain() const;
 
 	private:
 		shape_ptr shape;
@@ -288,7 +289,7 @@ class Rotation : public Shape {
 
 		Point point(const std::string& name) const { return this->absolute(shape->point(name)); };
 		bool has(const Point& P) const { return shape->has(this->relative(P)); };
-		shape_dom domain() const;
+		Domain domain() const;
 
 	private:
 		double theta;
@@ -307,7 +308,7 @@ class Union : public Shape {
 
 		Point point(const std::string& name) const;
 		bool has(const Point& P) const;
-		shape_dom domain() const;
+		Domain domain() const;
 
 	private:
 		std::vector<shape_ptr> set;
@@ -322,7 +323,7 @@ class Difference : public Shape {
 
 		Point point(const std::string& name) const;
 		bool has(const Point& P) const { return in->has(P) && !out->has(P); };
-		shape_dom domain() const { return in->domain(); };
+		Domain domain() const { return in->domain(); };
 
 	private:
 		shape_ptr in, out;

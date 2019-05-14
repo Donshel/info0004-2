@@ -385,7 +385,7 @@ void Circle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Circle(center, radius));
 }
 
-shape_dom Polygon::domain() const {
+Domain Polygon::domain() const {
 	Point bl = vertices[0], tr = vertices[0];
 
 	for (auto it = vertices.begin() + 1; it != vertices.end(); it++) {
@@ -528,10 +528,10 @@ void Triangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Triangle(vertices));
 }
 
-inline shape_dom Shift::domain() const {
-	shape_dom dom = shape->domain();
+inline Domain Shift::domain() const {
+	Domain dom = shape->domain();
 
-	return {this->absolute(dom[0]), this->absolute(dom[1])};
+	return {this->absolute(dom.min), this->absolute(dom.max)};
 }
 
 void Shift::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
@@ -550,14 +550,14 @@ void Shift::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 	shapes[name] = shape_ptr(new Shift(P, shape));
 }
 
-shape_dom Rotation::domain() const {
-	shape_dom dom = shape->domain();
+Domain Rotation::domain() const {
+	Domain dom = shape->domain();
 
 	vector<Point> vertices;
-	vertices.push_back(Point(dom[0].x, dom[1].y).rotation(theta, center));
-	vertices.push_back(Point(dom[1].x, dom[0].y).rotation(theta, center));
-	vertices.push_back(dom[0].rotation(theta, center));
-	vertices.push_back(dom[1].rotation(theta, center));
+	vertices.push_back(Point(dom.min.x, dom.max.y).rotation(theta, center));
+	vertices.push_back(Point(dom.max.x, dom.min.y).rotation(theta, center));
+	vertices.push_back(dom.min.rotation(theta, center));
+	vertices.push_back(dom.max.rotation(theta, center));
 
 	return Polygon(vertices).domain();
 }
@@ -600,24 +600,24 @@ bool Union::has(const Point& P) const {
 	return false;
 }
 
-shape_dom Union::domain() const {
-	shape_dom dom = set[0]->domain();
-	Point bl = dom[0], tr = dom[1];
+Domain Union::domain() const {
+	Domain dom = set[0]->domain();
+	Point bl = dom.min, tr = dom.max;
 
 	for (auto it = set.begin() + 1; it != set.end(); it++) {
 		dom = (*it)->domain();
 
-		if (dom[0].x < bl.x)
-			bl.x = dom[0].x;
+		if (dom.min.x < bl.x)
+			bl.x = dom.min.x;
 
-		if (dom[0].y < bl.y)
-			bl.y = dom[0].y;
+		if (dom.min.y < bl.y)
+			bl.y = dom.min.y;
 
-		if (dom[1].x > tr.x)
-			tr.x = dom[1].x;
+		if (dom.max.x > tr.x)
+			tr.x = dom.max.x;
 
-		if (dom[1].y > tr.y)
-			tr.y = dom[1].y;
+		if (dom.max.y > tr.y)
+			tr.y = dom.max.y;
 	}
 
 	return {bl, tr};
