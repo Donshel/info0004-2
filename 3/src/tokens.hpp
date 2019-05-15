@@ -2,7 +2,6 @@
 #define TOKENS
 
 #include <array>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <map>
@@ -12,10 +11,11 @@
 
 class ParseException: public std::exception {
 	public:
-		explicit ParseException(const std::string& str);
-		virtual const char* what() const throw();
+		explicit ParseException(const std::string& message) : _message(message) {};
+		virtual const char* what() const throw() { return _message.c_str(); };
+
 	private:
-		std::string message;
+		std::string _message;
 };
 
 // forward declaration
@@ -55,10 +55,10 @@ class Number {
 
 class Point {
 	public:
-		double x, y;
+		double _x, _y;
 
-		Point() : x(0), y(0) {}
-		Point(double x, double y) : x(x), y(y) {}
+		Point() : _x(0), _y(0) {}
+		Point(double x, double y) : _x(x), _y(y) {}
 
 		/**
 		 * Rotation of a point around origin.
@@ -77,14 +77,14 @@ class Point {
 		/**
 		 * @return the cross product between two vectors
 		 */
-		static double cross(const Point& v1, const Point& v2) { return v1.x * v2.y - v2.x * v1.y; };
+		static double cross(const Point& v1, const Point& v2) { return v1._x * v2._y - v2._x * v1._y; };
 
-		bool operator ==(const Point& P) const { return x == P.x && y == P.y; };
+		bool operator ==(const Point& P) const { return _x == P._x && _y == P._y; };
 
-		Point operator +(const Point& P) const { return Point(x + P.x, y + P.y); };
-		Point operator -(const Point& P) const { return Point(x - P.x, y - P.y); };
-		Point operator *(double n) const { return Point(x * n, y * n); };
-		Point operator /(double n) const { return Point(x / n, y / n); };
+		Point operator +(const Point& P) const { return Point(_x + P._x, _y + P._y); };
+		Point operator -(const Point& P) const { return Point(_x - P._x, _y - P._y); };
+		Point operator *(double n) const { return Point(_x * n, _y * n); };
+		Point operator /(double n) const { return Point(_x / n, _y / n); };
 
 		Point& operator +=(const Point& P);
 		Point& operator -=(const Point& P);
@@ -110,9 +110,10 @@ class Point {
 
 class Color {
 	public:
-		uint8_t r, g, b;
+		uint8_t _r, _g, _b;
 
-		Color() : r(0), g(0), b(0) {}
+		Color() : _r(0), _g(0), _b(0) {}
+		Color(uint8_t r, uint8_t g, uint8_t b) : _r(r), _g(g), _b(b) {}
 		
 		static const std::string keyword;
 
@@ -130,9 +131,6 @@ class Color {
 		 * @return the token(s) as a pointer to color
 		 */
 		static color_ptr parse(Cursor& cursor, const std::map<std::string, color_ptr>& colors, const std::map<std::string, shape_ptr>& shapes);
-
-	private:
-		Color(uint8_t r, uint8_t g, uint8_t b) : r(r), g(g), b(b) {}
 };
 
 struct Domain { Point min; Point max; };
@@ -145,19 +143,19 @@ class Shape {
 		 * @throw a ParseException if the string isn't a valid point name
 		 * @return the point which name is the string in the shape
 		 */
-		virtual Point point(const std::string& name) const { return name == "c" ? center : Point(); }
+		virtual Point point(const std::string& name) const = 0;
 
 		/**
 		 * @return true if P is within the shape
 		 */
-		virtual bool has(const Point& P) const { return center == P; }
+		virtual bool has(const Point& P) const = 0;
 
 		/**
 		 * Compute the two opposite vertices of a rectangle that fully contains the shape.
 		 * 
 		 * @return a Domain
 		 */
-		virtual Domain domain() const { return {center, center}; }
+		virtual Domain domain() const = 0;
 
 		/**
 		 * Parse as a shape name the next token given by cursor.
@@ -175,17 +173,17 @@ class Shape {
 		// static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 	protected:
-		Point center;
+		Point _center;
 
 		/**
 		 * Tranform a point relative to the shape into an absolute point.
 		 */
-		virtual Point absolute(const Point& P) const { return P + center; };
+		virtual Point absolute(const Point& P) const { return P + _center; };
 
 		/**
 		 * Tranform an absolute point into a point relative to the shape.
 		 */
-		virtual Point relative(const Point& P) const { return P - center; };
+		virtual Point relative(const Point& P) const { return P - _center; };
 
 		/**
 		 * Parse as a shape name the next token given by cursor.
@@ -195,6 +193,40 @@ class Shape {
 		static std::string name(Cursor& cursor, const std::map<std::string, shape_ptr>& shapes);
 };
 
+class Shift : public Shape {
+	public:
+		static const std::string keyword;
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
+
+		Point point(const std::string& name) const { return this->absolute(_shape->point(name)); };
+		bool has(const Point& P) const { return _shape->has(this->relative(P)); };
+		Domain domain() const;
+
+	private:
+		shape_ptr _shape;
+
+		Shift(const Point& P, shape_ptr& shape) : _shape(shape) { _center = P; }
+};
+
+class Rotation : public Shape {
+	public:
+		static const std::string keyword;
+		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
+
+		Point point(const std::string& name) const { return this->absolute(_shape->point(name)); };
+		bool has(const Point& P) const { return _shape->has(this->relative(P)); };
+		Domain domain() const;
+
+	private:
+		double _theta;
+		shape_ptr _shape;
+
+		Point absolute(const Point& P) const { return P.rotation(_theta, _center); };
+		Point relative(const Point& P) const { return P.rotation(-_theta, _center); };
+
+		Rotation(double theta, const Point& P, shape_ptr& shape) : _theta(theta), _shape(shape) { _center = P; }
+};
+
 class Ellipse : public Shape {
 	public:
 		static const std::string keyword;
@@ -202,12 +234,12 @@ class Ellipse : public Shape {
 
 		virtual Point point(const std::string& name) const;
 		virtual bool has(const Point& P) const;
-		virtual Domain domain() const { return {this->absolute(Point(-a, -b)), this->absolute(Point(a, b))}; };
+		virtual Domain domain() const { return {this->absolute(Point(-_a, -_b)), this->absolute(Point(_a, _b))}; };
 
 	protected:
-		double a, b;
+		double _a, _b;
 
-		Ellipse(Point center, double a, double b) : a(a), b(b) { this->center = center; }
+		Ellipse(Point center, double a, double b) : _a(a), _b(b) { _center = center; }
 };
 
 class Circle : public Ellipse {
@@ -223,21 +255,24 @@ class Circle : public Ellipse {
 };
 
 class Polygon : public Shape {
-	public:
-		Polygon(const std::vector<Point>& vertices) : vertices(vertices) { assert(vertices.size() > 0); n = vertices.size(); }
+	friend Domain Rotation::domain() const;
 
+	public:
+		virtual Point point(const std::string& name) const { return name == "c" ? _center : Point(); }
+		virtual bool has(const Point& P) const { return _center == P; };
 		virtual Domain domain() const;
 
 	protected:
-		unsigned n;
-		std::vector<Point> vertices;
+		unsigned _n;
+		std::vector<Point> _vertices;
 
 		Polygon() {}
+		Polygon(const std::vector<Point>& vertices) : _vertices(vertices) { _n = vertices.size(); }
 
 		/**
 		 * @return the n_th midpoint of the polygon
 		 */
-		Point midpoint(size_t m) const { return (vertices[m % n] + vertices[(m + 1) % n]) / 2; };
+		Point midpoint(size_t m) const { return (_vertices[m % _n] + _vertices[(m + 1) % _n]) / 2; };
 };
 
 class Rectangle : public Polygon {
@@ -247,10 +282,10 @@ class Rectangle : public Polygon {
 
 		Point point(const std::string& name) const;
 		bool has(const Point& P) const;
-		Domain domain() const { return {vertices[2], vertices[0]}; };
+		Domain domain() const { return {_vertices[2], _vertices[0]}; };
 
 	private:
-		double width, height;
+		double _width, _height;
 
 		Rectangle(Point center, double width, double height);
 };
@@ -267,40 +302,6 @@ class Triangle : public Polygon {
 		Triangle(const std::vector<Point>& vertices) : Polygon(vertices) {}
 };
 
-class Shift : public Shape {
-	public:
-		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
-
-		Point point(const std::string& name) const { return this->absolute(shape->point(name)); };
-		bool has(const Point& P) const { return shape->has(this->relative(P)); };
-		Domain domain() const;
-
-	private:
-		shape_ptr shape;
-
-		Shift(const Point& P, shape_ptr& shape) : shape(shape) { this->center = P; }
-};
-
-class Rotation : public Shape {
-	public:
-		static const std::string keyword;
-		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
-
-		Point point(const std::string& name) const { return this->absolute(shape->point(name)); };
-		bool has(const Point& P) const { return shape->has(this->relative(P)); };
-		Domain domain() const;
-
-	private:
-		double theta;
-		shape_ptr shape;
-
-		Point absolute(const Point& P) const { return P.rotation(theta, center); };
-		Point relative(const Point& P) const { return P.rotation(-theta, center); };
-
-		Rotation(double theta, const Point& P, shape_ptr& shape) : theta(theta), shape(shape) { this->center = P; }
-};
-
 class Union : public Shape {
 	public:
 		static const std::string keyword;
@@ -311,9 +312,9 @@ class Union : public Shape {
 		Domain domain() const;
 
 	private:
-		std::vector<shape_ptr> set;
+		std::vector<shape_ptr> _set;
 
-		Union(std::vector<shape_ptr>& set) : set(set) {}
+		Union(std::vector<shape_ptr>& set) : _set(set) {}
 };
 
 class Difference : public Shape {
@@ -322,19 +323,19 @@ class Difference : public Shape {
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
-		bool has(const Point& P) const { return in->has(P) && !out->has(P); };
-		Domain domain() const { return in->domain(); };
+		bool has(const Point& P) const { return _in->has(P) && !_out->has(P); };
+		Domain domain() const { return _in->domain(); };
 
 	private:
-		shape_ptr in, out;
+		shape_ptr _in, _out;
 
-		Difference(shape_ptr& in, shape_ptr& out) : in(in), out(out) {}
+		Difference(shape_ptr& in, shape_ptr& out) : _in(in), _out(out) {}
 };
 
 class Fill {
 	public:
-		shape_ptr shape;
-		color_ptr color;
+		shape_ptr _shape;
+		color_ptr _color;
 		
 		static const std::string keyword;
 
@@ -346,7 +347,7 @@ class Fill {
 		static void keyParse(Cursor& cursor, const std::map<std::string, color_ptr>& colors, const std::map<std::string, shape_ptr>& shapes, std::vector<Fill>& fills);
 
 	private:
-		Fill(shape_ptr& shape, color_ptr& color) : shape(shape), color(color) {}
+		Fill(shape_ptr& shape, color_ptr& color) : _shape(shape), _color(color) {}
 };
 
 #endif

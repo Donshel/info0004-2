@@ -60,25 +60,25 @@ void Paint::parse() {
 }
 
 Image Paint::image() const {
-	Image im = Image(width, height);
-	unique_ptr<bool[]> isset = make_unique<bool[]>(width * height);
-	int w = width - 1, h = height - 1, x_min, y_min, x_max, y_max;
+	Image im = Image(_width, _height);
+	unique_ptr<bool[]> isset = make_unique<bool[]>(_width * _height);
+	int w = _width - 1, h = _height - 1, x_min, y_min, x_max, y_max;
 
 	Domain dom;
 	Color color;
 
 	for (auto it = fills.rbegin(); it != fills.rend(); it++) {
-		dom = it->shape->domain();
-		color = *(it->color);
+		dom = it->_shape->domain();
+		color = *(it->_color);
 
-		x_min = max(int(dom.min.x), 0);
-		y_min = max(int(dom.min.y), 0);
-		x_max = min(int(++dom.max.x), w);
-		y_max = min(int(++dom.max.y), h);
+		x_min = max(int(dom.min._x), 0);
+		y_min = max(int(dom.min._y), 0);
+		x_max = min(int(++dom.max._x), w);
+		y_max = min(int(++dom.max._y), h);
 
 		for (int y = y_min; y <= y_max; y++)
-			for (int x = x_min, i = y * width + x; x <= x_max; x++, i++)
-				if (!isset[i] && it->shape->has(Point(double(x) + 0.5, double(y) + 0.5))) {
+			for (int x = x_min, i = y * _width + x; x <= x_max; x++, i++)
+				if (!isset[i] && it->_shape->has(Point(double(x) + 0.5, double(y) + 0.5))) {
 					im(x, y) = color;
 					isset[i] = true;
 				}
@@ -104,6 +104,6 @@ void Paint::keyParse() {
 		throw ParseException(string(e.what()) + " -> invalid size declaration");
 	}
 
-	this->width = width;
-	this->height = height;
+	_width = width;
+	_height = height;
 }

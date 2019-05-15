@@ -4,24 +4,16 @@
 
 using namespace std;
 
-ParseException::ParseException(const string& str) {
-	message = str;
-}
-
-const char* ParseException::what() const throw() {
-	return message.c_str();
-}
-
 const string Color::keyword = "color";
-const string Fill::keyword = "fill";
+const string Shift::keyword = "shift";
+const string Rotation::keyword = "rot";
 const string Ellipse::keyword = "elli";
 const string Circle::keyword = "circ";
 const string Rectangle::keyword = "rect";
 const string Triangle::keyword = "tri";
-const string Shift::keyword = "shift";
-const string Rotation::keyword = "rot";
 const string Union::keyword = "union";
 const string Difference::keyword = "diff";
+const string Fill::keyword = "fill";
 
 string Name::parse(Cursor& cursor) {
 	string name = cursor.nextWord();
@@ -49,11 +41,11 @@ double Number::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 
 	if (op == '(' || op == '{' || isalpha(op)) {
 		string word, proj;
-		Point point;
+		Point P;
 
 		try {
 			if (op == '(' || op == '{') {
-				point = Point::parse(cursor, shapes);
+				P = Point::parse(cursor, shapes);
 
 				word = cursor.nextWord();
 
@@ -69,15 +61,15 @@ double Number::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 				if (pos == string::npos)
 					throw ParseException("expected point coordinate, got " + word);
 
-				point = Point::named(word.substr(0, pos), shapes);
+				P = Point::named(word.substr(0, pos), shapes);
 
 				proj = word.substr(pos + 1);
 			}
 
 			if (proj == "x")
-				n = point.x;
+				n = P._x;
 			else if (proj == "y")
-				n = point.y;
+				n = P._y;
 			else
 				throw ParseException("expected x or y, got " + proj);
 
@@ -106,7 +98,7 @@ inline Point Point::rotation(double theta) const {
 	double c = cos(theta);
 	double s = sin(theta);
 
-	return Point(c * x - s * y, s * x + c * y);
+	return Point(c * _x - s * _y, s * _x + c * _y);
 }
 
 inline Point Point::rotation(double theta, const Point& P) const {
@@ -114,26 +106,26 @@ inline Point Point::rotation(double theta, const Point& P) const {
 }
 
 Point& Point::operator +=(const Point& P) {
-	this->x += P.x;
-	this->y += P.y;
+	_x += P._x;
+	_y += P._y;
 	return *this;
 }
 
 Point& Point::operator -=(const Point& P) {
-	this->x -= P.x;
-	this->y -= P.y;
+	_x -= P._x;
+	_y -= P._y;
 	return *this;
 }
 
 Point& Point::operator *=(double n) {
-	this->x *= n;
-	this->y *= n;
+	_x *= n;
+	_y *= n;
 	return *this;
 }
 
 Point& Point::operator /=(double n) {
-	this->x /= n;
-	this->y /= n;
+	_x /= n;
+	_y /= n;
 	return *this;
 }
 
@@ -288,25 +280,25 @@ Point Ellipse::point(const string& name) const {
 	if (name == "c")
 		P = Point(0, 0);
 	else if (name == "e")
-		P = Point(a, 0);
+		P = Point(_a, 0);
 	else if (name == "ne")
-		P = Point(a / 2 * M_SQRT2, b / 2 * M_SQRT2);
+		P = Point(_a / 2 * M_SQRT2, _b / 2 * M_SQRT2);
 	else if (name == "n")
-		P = Point(0, b);
+		P = Point(0, _b);
 	else if (name == "nw")
-		P = Point(-a / 2 * M_SQRT2 , b / 2 * M_SQRT2);
+		P = Point(-_a / 2 * M_SQRT2 , _b / 2 * M_SQRT2);
 	else if (name == "w")
-		P = Point(-a, 0);
+		P = Point(-_a, 0);
 	else if (name == "sw")
-		P = Point(-a / 2 * M_SQRT2 , -b / 2 * M_SQRT2);
+		P = Point(-_a / 2 * M_SQRT2 , -_b / 2 * M_SQRT2);
 	else if (name == "s")
-		P = Point(0, -b);
+		P = Point(0, -_b);
 	else if (name == "se")
-		P = Point(a / 2 * M_SQRT2 , -b / 2 * M_SQRT2);
+		P = Point(_a / 2 * M_SQRT2 , -_b / 2 * M_SQRT2);
 	else if (name == "f1")
-		P = Point(sqrt(pow(a, 2) - pow(b, 2)), 0);
+		P = Point(sqrt(pow(_a, 2) - pow(_b, 2)), 0);
 	else if (name == "f2")
-		P = Point(-sqrt(pow(a, 2) - pow(b, 2)), 0);
+		P = Point(-sqrt(pow(_a, 2) - pow(_b, 2)), 0);
 	else
 		throw ParseException("invalid ellipse named point " + name);
 
@@ -316,7 +308,7 @@ Point Ellipse::point(const string& name) const {
 inline bool Ellipse::has(const Point& P) const {
 	Point Q = this->relative(P);
 
-	return pow(Q.x * b, 2) + pow(Q.y * a, 2) <= pow(a * b, 2);
+	return pow(Q._x * _b, 2) + pow(Q._y * _a, 2) <= pow(_a * _b, 2);
 }
 
 void Ellipse::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
@@ -363,7 +355,7 @@ Point Circle::point(const string& name) const {
 inline bool Circle::has(const Point& P) const {
 	Point Q = this->relative(P);
 
-	return pow(Q.x, 2) + pow(Q.y, 2) <= pow(a, 2);
+	return pow(Q._x, 2) + pow(Q._y, 2) <= pow(_a, 2);
 }
 
 void Circle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
@@ -386,46 +378,48 @@ void Circle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 }
 
 Domain Polygon::domain() const {
-	Point bl = vertices[0], tr = vertices[0];
+	Domain dom = {_vertices[0], _vertices[0]};
 
-	for (auto it = vertices.begin() + 1; it != vertices.end(); it++) {
-		if (it->x < bl.x)
-			bl.x = it->x;
-		else if (it->x > tr.x)
-			tr.x = it->x;
+	for (auto it = _vertices.begin() + 1; it != _vertices.end(); it++) {
+		if (it->_x < dom.min._x)
+			dom.min._x = it->_x;
+		else if (it->_x > dom.max._x)
+			dom.max._x = it->_x;
 
-		if (it->y < bl.y)
-			bl.y = it->y;
-		else if (it->y > tr.y)
-			tr.y = it->y;
+		if (it->_y < dom.min._y)
+			dom.min._y = it->_y;
+		else if (it->_y > dom.max._y)
+			dom.max._y = it->_y;
 	}
 
-	return {bl, tr};
+	return dom;
 }
 
-Rectangle::Rectangle(Point center, double width, double height) : width(width / 2), height(height / 2) {
-	this->center = center;
-	n = 4;
+Rectangle::Rectangle(Point center, double width, double height) : _width(width / 2), _height(height / 2) {
+	_center = center;
+	_n = 4;
 
-	vertices.push_back(this->absolute(Point(this->width, this->height)));
-	vertices.push_back(this->absolute(Point(this->width, -this->height)));
-	vertices.push_back(this->absolute(Point(-this->width, -this->height)));
-	vertices.push_back(this->absolute(Point(-this->width, this->height)));
+	_vertices = {
+		this->absolute(Point(_width, _height)),
+		this->absolute(Point(_width, -_height)),
+		this->absolute(Point(-_width, -_height)),
+		this->absolute(Point(-_width, _height))
+	};
 }
 
 Point Rectangle::point(const string& name) const {
 	Point P;
 
 	if (name == "c")
-		return center;
+		return _center;
 	else if (name == "ne")
-		P = vertices[0];
+		P = _vertices[0];
 	else if (name == "se")
-		P = vertices[1];
+		P = _vertices[1];
 	else if (name == "sw")
-		P = vertices[2];
+		P = _vertices[2];
 	else if (name == "nw")
-		P = vertices[3];
+		P = _vertices[3];
 	else if (name == "e")
 		P = this->midpoint(0);
 	else if (name == "s")
@@ -443,7 +437,7 @@ Point Rectangle::point(const string& name) const {
 inline bool Rectangle::has(const Point& P) const {
 	Point Q = this->relative(P);
 
-	return abs(Q.x) <= width && abs(Q.y) <= height;
+	return abs(Q._x) <= _width && abs(Q._y) <= _height;
 }
 
 void Rectangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
@@ -473,13 +467,13 @@ Point Triangle::point(const string& name) const {
 	Point P;
 
 	if (name == "c")
-		return center;
+		return _center;
 	else if (name == "v0")
-		P = vertices[0];
+		P = _vertices[0];
 	else if (name == "v1")
-		P = vertices[1];
+		P = _vertices[1];
 	else if (name == "v2")
-		P = vertices[2];
+		P = _vertices[2];
 	else if (name == "s01")
 		P = this->midpoint(0);
 	else if (name == "s12")
@@ -496,12 +490,12 @@ bool Triangle::has(const Point& P) const {
 	double c;
 	bool b[3];
 
-	Point v[] = {P - vertices[0], P - vertices[1], P - vertices[2]};
+	Point v[] = {P - _vertices[0], P - _vertices[1], P - _vertices[2]};
 
 	for (size_t i = 0; i < 3; i++) {
 		c = Point::cross(v[i], v[(i + 1) % 3]);
 		if (c == 0)
-			if (v[i].x * v[(i + 1) % 3].x <= 0)
+			if (v[i]._x * v[(i + 1) % 3]._x <= 0)
 				return true;
 			else
 				return false;
@@ -529,7 +523,7 @@ void Triangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 }
 
 inline Domain Shift::domain() const {
-	Domain dom = shape->domain();
+	Domain dom = _shape->domain();
 
 	return {this->absolute(dom.min), this->absolute(dom.max)};
 }
@@ -551,13 +545,14 @@ void Shift::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 }
 
 Domain Rotation::domain() const {
-	Domain dom = shape->domain();
+	Domain dom = _shape->domain();
 
-	vector<Point> vertices;
-	vertices.push_back(Point(dom.min.x, dom.max.y).rotation(theta, center));
-	vertices.push_back(Point(dom.max.x, dom.min.y).rotation(theta, center));
-	vertices.push_back(dom.min.rotation(theta, center));
-	vertices.push_back(dom.max.rotation(theta, center));
+	vector<Point> vertices = {
+		Point(dom.min._x, dom.max._y).rotation(_theta, _center),
+		Point(dom.max._x, dom.min._y).rotation(_theta, _center),
+		dom.min.rotation(_theta, _center),
+		dom.max.rotation(_theta, _center)
+	};
 
 	return Polygon(vertices).domain();
 }
@@ -584,7 +579,7 @@ Point Union::point(const string& name) const {
 	Point P;
 
 	try {
-		P = this->absolute(set[0]->point(name));
+		P = this->absolute(_set[0]->point(name));
 	} catch (ParseException& e) {
 		throw ParseException(string(e.what()) + "-> invalid union named point");
 	}
@@ -593,7 +588,7 @@ Point Union::point(const string& name) const {
 }
 
 bool Union::has(const Point& P) const {
-	for (auto it = set.begin(); it != set.end(); it++)
+	for (auto it = _set.begin(); it != _set.end(); it++)
 		if ((*it)->has(P))
 			return true;
 
@@ -601,26 +596,25 @@ bool Union::has(const Point& P) const {
 }
 
 Domain Union::domain() const {
-	Domain dom = set[0]->domain();
-	Point bl = dom.min, tr = dom.max;
+	Domain dom = _set[0]->domain(), temp;
 
-	for (auto it = set.begin() + 1; it != set.end(); it++) {
-		dom = (*it)->domain();
+	for (auto it = _set.begin() + 1; it != _set.end(); it++) {
+		temp = (*it)->domain();
 
-		if (dom.min.x < bl.x)
-			bl.x = dom.min.x;
+		if (temp.min._x < dom.min._x)
+			dom.min._x = temp.min._x;
 
-		if (dom.min.y < bl.y)
-			bl.y = dom.min.y;
+		if (temp.min._y < dom.min._y)
+			dom.min._y = temp.min._y;
 
-		if (dom.max.x > tr.x)
-			tr.x = dom.max.x;
+		if (temp.max._x > dom.max._x)
+			dom.max._x = temp.max._x;
 
-		if (dom.max.y > tr.y)
-			tr.y = dom.max.y;
+		if (temp.max._y > dom.max._y)
+			dom.max._y = temp.max._y;
 	}
 
-	return {bl, tr};
+	return dom;
 }
 
 void Union::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
@@ -650,7 +644,7 @@ Point Difference::point(const string& name) const {
 	Point P;
 
 	try {
-		P = this->absolute(in->point(name));
+		P = this->absolute(_in->point(name));
 	} catch (ParseException& e) {
 		throw ParseException(string(e.what()) + "-> invalid difference named point");
 	}

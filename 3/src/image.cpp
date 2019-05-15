@@ -6,7 +6,7 @@
 using namespace std;
 
 inline std::ostream& operator<<(std::ostream& out, const Color& c) {
-	return out << c.r << c.g << c.b;
+	return out << c._r << c._g << c._b;
 }
 
 ostream& operator<<(ostream& out, const Image& img)

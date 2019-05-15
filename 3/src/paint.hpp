@@ -22,7 +22,7 @@ class Paint {
 		Image image() const;
 
 	private:
-		unsigned long width, height;
+		size_t _width, _height;
 		static const std::string keyword;
 
 		/**
