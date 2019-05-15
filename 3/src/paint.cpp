@@ -61,7 +61,7 @@ void Paint::parse() {
 
 Image Paint::image() const {
 	Image im = Image(width, height);
-	bool isset [width * height] = {};
+	unique_ptr<bool[]> isset = make_unique<bool[]>(width * height);
 	int w = width - 1, h = height - 1, x_min, y_min, x_max, y_max;
 
 	Domain dom;

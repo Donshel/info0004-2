@@ -244,7 +244,7 @@ color_ptr Color::parse(Cursor& cursor, const map<string, color_ptr>& colors, con
 
 			uint8_t r = round(RGB[0] * 255), g = round(RGB[1] * 255), b = round(RGB[2] * 255);
 
-			color = color_ptr(new Color(r, g, b));
+			color = make_shared<Color>(Color(r, g, b));
 		} else {
 			auto it = colors.find(word);
 
@@ -342,7 +342,7 @@ void Ellipse::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid ellipse declaration");
 	}
 
-	shapes[name] = shape_ptr(new Ellipse(center, a, b));
+	shapes[name] = make_shared<Ellipse>(Ellipse(center, a, b));
 }
 
 Point Circle::point(const string& name) const {
@@ -382,7 +382,7 @@ void Circle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid circle declaration");
 	}
 
-	shapes[name] = shape_ptr(new Circle(center, radius));
+	shapes[name] = make_shared<Circle>(Circle(center, radius));
 }
 
 Domain Polygon::domain() const {
@@ -466,7 +466,7 @@ void Rectangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid rectangle declaration");
 	}
 
-	shapes[name] = shape_ptr(new Rectangle(center, width, height));
+	shapes[name] = make_shared<Rectangle>(Rectangle(center, width, height));
 }
 
 Point Triangle::point(const string& name) const {
@@ -525,7 +525,7 @@ void Triangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid triangle declaration");
 	}
 
-	shapes[name] = shape_ptr(new Triangle(vertices));
+	shapes[name] = make_shared<Triangle>(Triangle(vertices));
 }
 
 inline Domain Shift::domain() const {
@@ -547,7 +547,7 @@ void Shift::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid shift declaration");
 	}
 
-	shapes[name] = shape_ptr(new Shift(P, shape));
+	shapes[name] = make_shared<Shift>(Shift(P, shape));
 }
 
 Domain Rotation::domain() const {
@@ -577,7 +577,7 @@ void Rotation::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid rotation declaration");
 	}
 
-	shapes[name] = shape_ptr(new Rotation(theta, P, shape));
+	shapes[name] = make_shared<Rotation>(Rotation(theta, P, shape));
 }
 
 Point Union::point(const string& name) const {
@@ -643,7 +643,7 @@ void Union::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid union declaration");
 	}
 
-	shapes[name] = shape_ptr(new Union(set));
+	shapes[name] = make_shared<Union>(Union(set));
 }
 
 Point Difference::point(const string& name) const {
@@ -670,7 +670,7 @@ void Difference::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
 		throw ParseException(string(e.what()) + " -> invalid difference declaration");
 	}
 
-	shapes[name] = shape_ptr(new Difference(in, out));
+	shapes[name] = make_shared<Difference>(Difference(in, out));
 }
 
 void Fill::keyParse(Cursor& cursor, const map<string, color_ptr>& colors, const map<string, shape_ptr>& shapes, vector<Fill>& fills) {
