@@ -35,25 +35,32 @@ void Name::valid(const string& name) {
 			throw ParseException("invalid character " + string(1, *it));
 }
 
+double Number::ston(const string& number) {
+	int has_point = 0;
+
+	for (auto it = number.begin(); it != number.end(); it++)
+		if (!isdigit(*it) && (*it != '.' || has_point++ > 0))
+			throw ParseException("invalid number " + number);
+
+	return stod(number);
+}
+
 double Number::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 	char op = cursor.nextChar();
 	double n;
 
-	if (op == '(' || op == '{' || isalpha(op)) {
+	if (isdigit(op) || op == '.') {
+		n = Number::ston(cursor.nextWord());
+	} else if (op == '+') {
+		n = Number::ston(cursor.nextWord().substr(1));
+	} else if (op == '-') {
+		n = -Number::ston(cursor.nextWord().substr(1));
+	} else {
 		string word, proj;
 		Point P;
 
 		try {
-			if (op == '(' || op == '{') {
-				P = Point::parse(cursor, shapes);
-
-				word = cursor.nextWord();
-
-				if (word[0] != '.')
-					throw ParseException("expected .x or .y, got " + word);
-
-				proj = word.substr(1);
-			} else {
+			if (isalpha(op)) {
 				word = cursor.nextWord();
 
 				size_t pos = word.find_last_of('.');
@@ -64,7 +71,17 @@ double Number::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 				P = Point::named(word.substr(0, pos), shapes);
 
 				proj = word.substr(pos + 1);
-			}
+			} else if (op == '(' || op == '{') {
+				P = Point::parse(cursor, shapes);
+
+				word = cursor.nextWord();
+
+				if (word[0] != '.')
+					throw ParseException("expected .x or .y, got " + word);
+
+				proj = word.substr(1);
+			} else
+				throw ParseException("expected point coordinate, got " + word);
 
 			if (proj == "x")
 				n = P._x;
@@ -76,19 +93,6 @@ double Number::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 		} catch (ParseException& e) {
 			throw ParseException(string(e.what()) + " -> invalid number " + word);
 		}
-	} else {
-		string number = cursor.nextWord(), word = number;
-
-		if (op == '-' || op == '+')
-			word = word.substr(1);
-
-		int has_point = 0;
-
-		for (auto it = word.begin(); it != word.end(); it++)
-			if ((!isdigit(*it) && *it != '.') || (*it == '.' && has_point++ > 0))
-				throw ParseException("invalid number " + number);
-
-		n = stod(number);
 	}
 
 	return n;
@@ -133,34 +137,34 @@ Point Point::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 			point = Point(x, y);
 		} else if (word == "(") {
 			string op = cursor.nextWord();
+			point = Point::parse(cursor, shapes);
 
-			if (op == "-" || op == "+") {
-				point = Point::parse(cursor, shapes);
-
-				if (op == "+")
-					while (cursor.nextChar() != ')')
-						point += Point::parse(cursor, shapes);
-				else
-					while (cursor.nextChar() != ')')
-						point -= Point::parse(cursor, shapes);
+			if (op == "+") {
+				while (cursor.nextChar() != ')')
+					point += Point::parse(cursor, shapes);
 
 				cursor.nextWord();
-			} else if (op == "*" || op == "/") {
-				point = Point::parse(cursor, shapes);
+			} else if (op == "-") {
+				while (cursor.nextChar() != ')')
+					point -= Point::parse(cursor, shapes);
 
-				if (op == "*")
-					point *= Number::parse(cursor, shapes);
-				else
-					point /= Number::parse(cursor, shapes);
+				cursor.nextWord();
+			} else if (op == "*") {
+				point *= Number::parse(cursor, shapes);
 
 				if (cursor.nextWord() != ")")
 					throw ParseException("missing )");
-			} else {
+			} else if (op == "/") {
+				point /= Number::parse(cursor, shapes);
+
+				if (cursor.nextWord() != ")")
+					throw ParseException("missing )");
+			} else
 				throw ParseException("expected operator (+, -, * or /), got " + op);
-			}
-		} else {
+
+		} else
 			point = Point::named(word, shapes);
-		}
+
 	} catch (ParseException& e) {
 		throw ParseException(string(e.what()) + " -> invalid point");
 	}

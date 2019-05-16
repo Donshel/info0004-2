@@ -51,6 +51,15 @@ class Number {
 		 * @return the token(s) as a number
 		 */
 		static double parse(Cursor& cursor, const std::map<std::string, shape_ptr>& shapes);
+
+	private:
+		/**
+		 * Parse as a number the given string.
+		 *
+		 * @throw a ParseException if the string isn't a valid number
+		 * @return the string as a number
+		 */
+		static double ston(const std::string& number);
 };
 
 class Point {
