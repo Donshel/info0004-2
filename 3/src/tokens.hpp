@@ -191,12 +191,12 @@ class Shape {
 		/**
 		 * Tranform a point relative to the shape into an absolute point.
 		 */
-		virtual Point absolute(const Point& P) const { return P + _center; };
+		virtual Point absolute(const Point& P) const { return P + _center; }
 
 		/**
 		 * Tranform an absolute point into a point relative to the shape.
 		 */
-		virtual Point relative(const Point& P) const { return P - _center; };
+		virtual Point relative(const Point& P) const { return P - _center; }
 
 		/**
 		 * Parse as a shape name the next token given by cursor.
@@ -211,8 +211,8 @@ class Shift : public Shape {
 		static const std::string keyword;
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
-		Point point(const std::string& name) const { return this->absolute(_shape->point(name)); };
-		bool has(const Point& P) const { return _shape->has(this->relative(P)); };
+		Point point(const std::string& name) const { return this->absolute(_shape->point(name)); }
+		bool has(const Point& P) const { return _shape->has(this->relative(P)); }
 		Domain domain() const;
 
 	private:
@@ -226,16 +226,16 @@ class Rotation : public Shape {
 		static const std::string keyword;
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
-		Point point(const std::string& name) const { return this->absolute(_shape->point(name)); };
-		bool has(const Point& P) const { return _shape->has(this->relative(P)); };
+		Point point(const std::string& name) const { return this->absolute(_shape->point(name)); }
+		bool has(const Point& P) const { return _shape->has(this->relative(P)); }
 		Domain domain() const;
 
 	private:
 		double _sin, _cos;
 		shape_ptr _shape;
 
-		Point absolute(const Point& P) const { return P.rotation(_cos, _sin, _center); };
-		Point relative(const Point& P) const { return P.rotation(_cos, -_sin, _center); };
+		Point absolute(const Point& P) const { return P.rotation(_cos, _sin, _center); }
+		Point relative(const Point& P) const { return P.rotation(_cos, -_sin, _center); }
 
 		Rotation(double theta, const Point& P, shape_ptr& shape) : _sin(sin(theta)), _cos(cos(theta)), _shape(shape) { _center = P; }
 };
@@ -247,7 +247,7 @@ class Ellipse : public Shape {
 
 		virtual Point point(const std::string& name) const;
 		virtual bool has(const Point& P) const;
-		virtual Domain domain() const { return {this->absolute(Point(-_a, -_b)), this->absolute(Point(_a, _b))}; };
+		virtual Domain domain() const { return {this->absolute(Point(-_a, -_b)), this->absolute(Point(_a, _b))}; }
 
 	protected:
 		double _a, _b;
@@ -272,7 +272,7 @@ class Polygon : public Shape {
 
 	public:
 		virtual Point point(const std::string& name) const { return name == "c" ? _center : Point(); }
-		virtual bool has(const Point& P) const { return _center == P; };
+		virtual bool has(const Point& P) const { return _center == P; }
 		virtual Domain domain() const;
 
 	protected:
@@ -285,7 +285,7 @@ class Polygon : public Shape {
 		/**
 		 * @return the n_th midpoint of the polygon
 		 */
-		Point midpoint(size_t m) const { return (_vertices[m % _n] + _vertices[(m + 1) % _n]) / 2; };
+		Point midpoint(size_t m) const { return (_vertices[m % _n] + _vertices[(m + 1) % _n]) / 2; }
 };
 
 class Rectangle : public Polygon {
@@ -295,7 +295,7 @@ class Rectangle : public Polygon {
 
 		Point point(const std::string& name) const;
 		bool has(const Point& P) const;
-		Domain domain() const { return {_vertices[2], _vertices[0]}; };
+		Domain domain() const { return {_vertices[2], _vertices[0]}; }
 
 	private:
 		double _width, _height;
@@ -336,8 +336,8 @@ class Difference : public Shape {
 		static void keyParse(Cursor& cursor, std::map<std::string, shape_ptr>& shapes);
 
 		Point point(const std::string& name) const;
-		bool has(const Point& P) const { return _in->has(P) && !_out->has(P); };
-		Domain domain() const { return _in->domain(); };
+		bool has(const Point& P) const { return _in->has(P) && !_out->has(P); }
+		Domain domain() const { return _in->domain(); }
 
 	private:
 		shape_ptr _in, _out;
