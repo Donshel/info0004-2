@@ -65,14 +65,18 @@ class Point {
 		 *
 		 * @return the rotated point
 		 */
-		Point rotation(double theta) const;
+		Point rotation(double cos, double sin) const { return Point(cos * _x - sin * _y, sin * _x + cos * _y); };
+
+		Point rotation(double theta) const { return this->rotation(cos(theta), sin(theta)); };
 
 		/**
 		 * Rotation of a point around another.
 		 *
 		 * @return the rotated point
 		 */
-		Point rotation(double theta, const Point& P) const;
+		Point rotation(double cos, double sin, const Point& P) const { return (*this - P).rotation(cos, sin) + P; };
+
+		Point rotation(double theta, const Point& P) const { return (*this - P).rotation(theta) + P; };
 
 		/**
 		 * @return the cross product between two vectors
@@ -218,13 +222,13 @@ class Rotation : public Shape {
 		Domain domain() const;
 
 	private:
-		double _theta;
+		double _sin, _cos;
 		shape_ptr _shape;
 
-		Point absolute(const Point& P) const { return P.rotation(_theta, _center); };
-		Point relative(const Point& P) const { return P.rotation(-_theta, _center); };
+		Point absolute(const Point& P) const { return P.rotation(_cos, _sin, _center); };
+		Point relative(const Point& P) const { return P.rotation(_cos, -_sin, _center); };
 
-		Rotation(double theta, const Point& P, shape_ptr& shape) : _theta(theta), _shape(shape) { _center = P; }
+		Rotation(double theta, const Point& P, shape_ptr& shape) : _sin(sin(theta)), _cos(cos(theta)), _shape(shape) { _center = P; }
 };
 
 class Ellipse : public Shape {

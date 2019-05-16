@@ -94,17 +94,6 @@ double Number::parse(Cursor& cursor, const map<string, shape_ptr>& shapes) {
 	return n;
 }
 
-inline Point Point::rotation(double theta) const {
-	double c = cos(theta);
-	double s = sin(theta);
-
-	return Point(c * _x - s * _y, s * _x + c * _y);
-}
-
-inline Point Point::rotation(double theta, const Point& P) const {
-	return (*this - P).rotation(theta) + P;
-}
-
 Point& Point::operator +=(const Point& P) {
 	_x += P._x;
 	_y += P._y;
@@ -501,9 +490,12 @@ bool Triangle::has(const Point& P) const {
 				return false;
 		else
 			b[i] = c > 0;
+
+		if (i > 0 && b[i - 1] != b[i])
+			return false;
 	}
 
-	return (b[0] == b[1]) && (b[1] == b[2]);
+	return true;
 }
 
 void Triangle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
@@ -548,10 +540,10 @@ Domain Rotation::domain() const {
 	Domain dom = _shape->domain();
 
 	vector<Point> vertices = {
-		Point(dom.min._x, dom.max._y).rotation(_theta, _center),
-		Point(dom.max._x, dom.min._y).rotation(_theta, _center),
-		dom.min.rotation(_theta, _center),
-		dom.max.rotation(_theta, _center)
+		Point(dom.min._x, dom.max._y).rotation(_cos, _sin, _center),
+		Point(dom.max._x, dom.min._y).rotation(_cos, _sin, _center),
+		dom.min.rotation(_cos, _sin, _center),
+		dom.max.rotation(_cos, _sin, _center)
 	};
 
 	return Polygon(vertices).domain();
