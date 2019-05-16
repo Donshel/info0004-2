@@ -289,9 +289,9 @@ Point Ellipse::point(const string& name) const {
 	else if (name == "se")
 		P = Point(_a / 2 * M_SQRT2 , -_b / 2 * M_SQRT2);
 	else if (name == "f1")
-		P = Point(sqrt(pow(_a, 2) - pow(_b, 2)), 0);
+		P = Point(sqrt(_a2 - _b2), 0);
 	else if (name == "f2")
-		P = Point(-sqrt(pow(_a, 2) - pow(_b, 2)), 0);
+		P = Point(-sqrt(_a2 - _b2), 0);
 	else
 		throw ParseException("invalid ellipse named point " + name);
 
@@ -301,7 +301,7 @@ Point Ellipse::point(const string& name) const {
 inline bool Ellipse::has(const Point& P) const {
 	Point Q = this->relative(P);
 
-	return pow(Q._x * _b, 2) + pow(Q._y * _a, 2) <= pow(_a * _b, 2);
+	return pow(Q._x, 2) * _b2 + pow(Q._y, 2) * _a2 <= _a2 * _b2;
 }
 
 void Ellipse::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {
@@ -348,7 +348,7 @@ Point Circle::point(const string& name) const {
 inline bool Circle::has(const Point& P) const {
 	Point Q = this->relative(P);
 
-	return pow(Q._x, 2) + pow(Q._y, 2) <= pow(_a, 2);
+	return pow(Q._x, 2) + pow(Q._y, 2) <= _a2;
 }
 
 void Circle::keyParse(Cursor& cursor, map<string, shape_ptr>& shapes) {

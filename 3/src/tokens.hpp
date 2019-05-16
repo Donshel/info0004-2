@@ -250,9 +250,9 @@ class Ellipse : public Shape {
 		virtual Domain domain() const { return {this->absolute(Point(-_a, -_b)), this->absolute(Point(_a, _b))}; }
 
 	protected:
-		double _a, _b;
+		double _a, _b, _a2, _b2;
 
-		Ellipse(Point center, double a, double b) : _a(a), _b(b) { _center = center; }
+		Ellipse(Point center, double a, double b) : _a(a), _b(b), _a2(pow(a, 2)) , _b2(pow(b, 2)) { _center = center; }
 };
 
 class Circle : public Ellipse {
