@@ -36,11 +36,14 @@ void Name::valid(const string& name) {
 }
 
 double Number::ston(const string& number) {
-	int has_point = 0;
+	unsigned has_point = 0;
 
 	for (auto it = number.begin(); it != number.end(); it++)
 		if (!isdigit(*it) && (*it != '.' || has_point++ > 0))
 			throw ParseException("invalid number " + number);
+
+	if (number.length() == has_point)
+		throw ParseException("expected digit(s)");
 
 	return stod(number);
 }
