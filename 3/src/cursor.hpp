@@ -1,5 +1,5 @@
-#ifndef CURSOR
-#define CURSOR
+#ifndef CURSOR_H
+#define CURSOR_H
 
 #include <string>
 #include <vector>
@@ -20,22 +20,22 @@ class Cursor {
 		std::string graphic();
 
 		/**
-		 * Move the cursor to the start of the next token.
+		 * Move the cursor to the start of the next word.
 		 *
-		 * @return the first character of the next token
+		 * @return the first character of the next word
 		 */
 		char nextChar();
 
 		/**
-		 * Move the cursor to the end of the next token.
+		 * Move the cursor to the end of the next word.
 		 *
-		 * @return the next token
+		 * @return the next word
 		 */
 		std::string nextWord();
 
 	private:
 		std::vector<std::string> input;
-		unsigned int l, L, c, C, w;
+		unsigned lin, lin_max, col, col_max, word;
 
 		/**
 		 * @return true if the cursor is within the last line, false otherwise

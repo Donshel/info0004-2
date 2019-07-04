@@ -6,29 +6,29 @@ Cursor::Cursor() {}
 
 Cursor::Cursor(const vector<string>& input) {
 	this->input = input;
-	l = 0;
-	L = input.size();
-	c = 0;
-	C = input[l].length();
-	w = 0;
+	lin = 0;
+	lin_max = input.size();
+	col = 0;
+	col_max = input[lin].length();
+	word = 0;
 }
 
 string Cursor::at() {
-	return to_string(l + 1) + ":" + to_string(c + 1 - w) + ":";
+	return to_string(lin + 1) + ":" + to_string(col + 1 - word) + ":";
 }
 
 string Cursor::graphic() {
-	return '\t' + input[l] + '\n' + '\t' + string(c - w, ' ') + '^';
+	return '\t' + input[lin] + '\n' + '\t' + string(col - word, ' ') + '^';
 }
 
 char Cursor::nextChar() {
-	unsigned int b = c;
-	while (b < C && isspace(input[l][b]))
-		b++;
+	unsigned temp = col;
+	while (temp < col_max && isspace(input[lin][temp]))
+		temp++;
 
-	w = 0;
+	word = 0;
 	
-	if (b == C || input[l][b] == '#') {
+	if (temp == col_max || input[lin][temp] == '#') {
 		if (this->last())
 			return ' ';
 		else {
@@ -37,14 +37,14 @@ char Cursor::nextChar() {
 		}
 	}
 
-	return input[l][b];
+	return input[lin][temp];
 }
 
 string Cursor::nextWord() {
-	while (c < C && isspace(input[l][c]))
-		c++;
+	while (col < col_max && isspace(input[lin][col]))
+		col++;
 
-	if (c == C || input[l][c] == '#') {
+	if (col == col_max || input[lin][col] == '#') {
 		if (this->last())
 			return string();
 		else {
@@ -53,28 +53,27 @@ string Cursor::nextWord() {
 		}
 	}
 
-	unsigned int b = c;
-	c++;
+	unsigned prev = col++;
 
-	char ch = input[l][b];
+	char ch = input[lin][prev];
 	if (ch != ')' && ch != '}' && ch != '(' && ch != '{')
-		while (c < C) {
-			ch = input[l][c];
+		while (col < col_max) {
+			ch = input[lin][col];
 			if (isspace(ch) || ch == ')' || ch == '}' || ch == '(' || ch == '{' || ch == '#')
 				break;
-			c++;
+			col++;
 		}
 
-	w = c - b;
+	word = col - prev;
 
-	return input[l].substr(b, c - b);
+	return input[lin].substr(prev, word);
 }
 
 bool Cursor::last() {
-	return l == L - 1;
+	return lin == lin_max - 1;
 }
 
 void Cursor::backspace() {
-	c = 0;
-	C = input[++l].length();
+	col = 0;
+	col_max = input[++lin].length();
 }

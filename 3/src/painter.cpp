@@ -1,24 +1,25 @@
+#include "parser.hpp"
+
 #include <chrono>
 #include <fstream>
 #include <iostream>
 
-#include "paint.hpp"
-
 using namespace std;
 
 int main(int argc, char* argv[]) {
-
-	// Parse
-	auto start = chrono::steady_clock::now();
 
 	if (argc < 2) {
 		cerr << "painter-check: fatal-error: no input file" << endl;
 		exit(1);
 	}
 
+	// .paint reading
+
 	string filename = argv[1];
 	string line;
 	ifstream file;
+
+	auto start = chrono::steady_clock::now();
 
 	file.open(filename);
 
@@ -33,43 +34,56 @@ int main(int argc, char* argv[]) {
 
 	file.close();
 
+	auto end = chrono::steady_clock::now();
+	auto time = chrono::duration <double, milli> (end - start).count();
+
+	cout << ".paint file read in " << time << " ms" << endl;
+
+	// Input parsing
+
 	Paint paint;
 
+	start = chrono::steady_clock::now();
+
 	try {
-		paint = Paint(input);
+		paint = parse::paint(input);
 	} catch (ParseException& e) {
 		cerr << filename + ':' + string(e.what()) << endl;
 		exit(1);
 	}
 
-	auto end = chrono::steady_clock::now();
-	auto time = chrono::duration <double, milli> (end - start).count();
+	end = chrono::steady_clock::now();
+	time = chrono::duration <double, milli> (end - start).count();
 
-	cout << "Parsed " + filename + " in " << time << " ms" << endl;
+	cout << "Input parsed in " << time << " ms" << endl;
 
-	// Report
-	cout << "----------" << endl;
-
-	cout << paint.report();
-
-	cout << "----------" << endl;
-
-	// Write
-	string ppm = filename.substr(0, filename.find_last_of('.')) + ".ppm";
+	// Image computation
 
 	start = chrono::steady_clock::now();
 
-	ofstream output;
-	output.open(ppm, ios::binary);
+	Image im = paint.image();
 
-	output << paint.image();
+	end = chrono::steady_clock::now();
+	time = chrono::duration <double, milli> (end - start).count();
+
+	cout << "Image computed in " << time << " ms" << endl;
+
+	// .ppm writting
+
+	ofstream output;
+
+	start = chrono::steady_clock::now();
+
+	output.open(filename.substr(0, filename.find_last_of('.')) + ".ppm", ios::binary);
+
+	output << im;
 
 	output.close();
 
 	end = chrono::steady_clock::now();
 	time = chrono::duration <double, milli> (end - start).count();
 
-	cout << "Wrote " + ppm + " in " << time << " ms" << endl;
+	cout << ".ppm file written in " << time << " ms" << endl;
 
 	return 0;
 }

@@ -1,10 +1,11 @@
-#ifndef IMAGE_HH
-#define IMAGE_HH
+#ifndef IMAGE_H
+#define IMAGE_H
+
+#include "color.hpp"
 
 #include <cassert>
+#include <iostream>
 #include <memory>
-
-#include "tokens.hpp"
 
 class Image {
 	public:
@@ -36,9 +37,6 @@ class Image {
 		size_t _height;
 		size_t _width;
 };
-
-// Write color in binary 8-bit PPM format
-std::ostream& operator<<(std::ostream& out, const Color& c);
 
 // Write image in binary 8-bit PPM format
 std::ostream& operator<<(std::ostream&, const Image&);
