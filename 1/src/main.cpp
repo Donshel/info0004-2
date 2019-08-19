@@ -5,10 +5,15 @@
 
 using namespace std;
 
-int main() {
+int main(int argc, char* argv[]) {
+    if (argc < 2) {
+        cerr << "error: missing dictionary file" << endl;
+        exit(1);
+    }
+
     auto start = chrono::steady_clock::now();
 
-    Dictionary dict = create_dictionary("../resources/txt/sowpods.txt");
+    Dictionary dict = create_dictionary(argv[1]);
 
     auto end = chrono::steady_clock::now();
     auto diff = end - start;
