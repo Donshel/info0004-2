@@ -8,7 +8,7 @@ These projects have been developed using the object-oriented language C++.
 
 ## Authors
 
-* **François Rozet** - [Donshel](https://github.com/Donshel)
+* **François Rozet** - [francois-rozet](https://github.com/francois-rozet)
 
 ## Scores
 
